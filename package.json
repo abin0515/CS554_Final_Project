@@ -1,0 +1,19 @@
+{
+  "name": "cs-554-Final-Project",
+  "version": "1.0.0",
+  "description": "My Final Project",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "SIT",
+  "license": "SIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "mongodb": "^6.11.0",
+    "xss": "^1.0.15"
+  }
+}
