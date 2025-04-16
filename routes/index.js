@@ -1,7 +1,10 @@
 //Here you will import route files and export them as used in previous labs
-import userRounter from './users.js'
+import userRouter from './users.js'
+import testRouter from './test.js'
+
 const constructorMethod = (app) => {
-    app.use('/', userRounter);
+    app.use('/', userRouter);
+    
     
   
     app.use('*', (req, res) => {

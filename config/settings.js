@@ -1,4 +1,9 @@
 export const mongoConfig = {
-    serverUrl: 'mongodb+srv://g1239058750:g1239058750@xiaorui.65he6.mongodb.net/',
-    database: '546_Final_Project'
+    serverUrl: 'mongodb://root:root@18.188.222.62:27017/',
+    
+    database: '554_Final_Project'
+};
+
+export const redisConfig = {
+    url: 'redis://18.188.222.62:6379'
 };
