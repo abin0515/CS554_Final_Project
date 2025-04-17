@@ -20,11 +20,11 @@ router.post('/createPost', async (req, res) => {
 });
 
 // Get posts by page
-router.get('/page/:page', async (req, res) => {
+router.get('/page', async (req, res) => {
     try {
         // Get page number from query parameters
         let page = req.query.page ? parseInt(req.query.page) : 1;
-        
+        // console.log(page);
         // Call the service layer
         const posts = await postService.getPostsByPage(page);
         
@@ -41,11 +41,11 @@ router.get('/page/:page', async (req, res) => {
     }
 });
 
-// Get post by ID
-router.get('/:postId', async (req, res) => {
+// Get post by ID 
+router.get('/detail', async (req, res) => {
     try {
-        // Get post ID from URL parameter
-        const postId = req.params.postId;
+        // Get post ID from query parameter
+        const postId = req.query.postId; 
         
         // Call the service layer
         const post = await postService.getPostById(postId);
@@ -66,11 +66,11 @@ router.get('/:postId', async (req, res) => {
     }
 });
 
-// editPost
-router.put('/editPost/:postId', async (req, res) => {
+// editPost 
+router.put('/editPost', async (req, res) => {
     try {
-        // Get post ID from URL parameter
-        const postId = req.params.postId;
+        // Get post ID from query parameter
+        const postId = req.query.postId; 
         
         // Get title and content from request body
         const { title, content } = req.body;
@@ -105,11 +105,11 @@ router.put('/editPost/:postId', async (req, res) => {
     }
 });
 
-// removePost
-router.delete('/removePost/:postId', async (req, res) => {
+// removePost 
+router.delete('/removePost', async (req, res) => {
     try {
-        // Get post ID from URL parameter
-        const postId = req.params.postId;
+        // Get post ID from query parameter
+        const postId = req.query.postId; 
         
         // Get user ID (for testing purposes)
         const user_id = "2001"; // Replace with actual authentication
