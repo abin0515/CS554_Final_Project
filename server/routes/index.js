@@ -2,12 +2,14 @@
 import userRouter from './users.js'
 import postRouter from './posts.js'
 import testRouter from './test.js'
+import replyRouter from './replies.js'; // Import the new reply router
 // import uploadRouter from './uploads.js'; // No longer needed for post creation
 
 const constructorMethod = (app) => {
     app.use('/', userRouter);
     app.use('/test', testRouter);
     app.use('/posts', postRouter);
+    app.use('/replies', replyRouter);
     // app.use('/uploads', uploadRouter); // Remove usage
   
     app.use('*', (req, res) => {

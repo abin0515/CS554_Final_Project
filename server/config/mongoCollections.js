@@ -14,3 +14,4 @@ const getCollectionFn = (collection) => {
 };
 
 export const posts = getCollectionFn('posts');
+export const replies = getCollectionFn('replies');

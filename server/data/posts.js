@@ -145,3 +145,24 @@ export async function getPostsByPageFromDB(page) {
         _id: p._id.toString(),
     }));
 }
+
+/**
+ * Increments the reply_times count for a specific post.
+ * @param {string} postId - The ID of the post to update.
+ * @returns {Promise<boolean>} True if the update was acknowledged.
+ */
+export async function incrementPostReplyCountInDB(postId) {
+    // Consider adding validation for postId if not done elsewhere
+    // postId = validation.checkId(postId, 'Post ID for increment');
+    const updateResult = await postsCollection.updateOne(
+        { _id: new ObjectId(postId) },
+        { $inc: { reply_times: 1 }, $set: { update_time: new Date() } }
+    );
+
+    if (updateResult.matchedCount === 0) {
+         // Optionally throw an error or just return false if the post wasn't found
+         console.warn(`Attempted to increment reply count for non-existent post ID: ${postId}`);
+         return false;
+    }
+    return updateResult.acknowledged;
+}
