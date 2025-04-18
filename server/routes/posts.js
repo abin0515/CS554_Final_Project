@@ -9,7 +9,7 @@ router.post('/createPost', async (req, res) => {
         const newPost = await postService.createPost(
             req.body.title, 
             req.body.content, 
-            req.body.image_url, 
+            req.body.image_urls,
             req.body.user_id, 
             req.body.type
         );

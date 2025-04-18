@@ -1,16 +1,26 @@
 import express from 'express';
 import session from 'express-session'
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import configRoutes from './routes/index.js'
 
 const app = express();
 
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Use CORS middleware
 app.use(cors()); // Allows all origins by default
 
-// If you want to restrict it to only your frontend origin (recommended for production):
-// app.use(cors({ origin: 'http://localhost:5173' })); 
+// Static files middleware - Serve files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public'))); 
+// This will make http://localhost:3000/uploads/posts/your-image.jpg work
+
+// If you want requests to /images/your-image.jpg to map to /public/uploads/posts/your-image.jpg:
+// app.use('/images', express.static(path.join(__dirname, 'public/uploads/posts')));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -1,0 +1,58 @@
+/* Styles for PostDetail component */
+
+.post-detail-container {
+  padding: 1rem;
+  background-color: #fff;
+}
+
+.post-detail-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.post-detail-image-gallery {
+  display: grid;
+  /* Adjust columns based on desired layout, e.g., 3 columns */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+  gap: 1rem; /* Space between images */
+  margin-bottom: 1.5rem;
+}
+
+.post-detail-image {
+  width: 100%; /* Make image fill its grid cell */
+  height: auto; /* Maintain aspect ratio */
+  max-height: 250px; /* Optional: Limit image height */
+  object-fit: cover; /* Cover the area, cropping if needed */
+  border-radius: 0.25rem;
+  border: 1px solid #eee;
+}
+
+.post-detail-content {
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  white-space: pre-wrap; /* Preserve line breaks from content */
+}
+
+.post-detail-meta {
+  font-size: 0.875rem;
+  color: #6b7280;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 1rem;
+}
+
+.post-detail-meta span + span {
+  margin-left: 1rem;
+}
+
+/* You might want to reuse the .error-message style from other CSS files
+   or define it here if it doesn't exist globally */
+.error-message {
+    color: #ef4444; 
+    font-weight: bold;
+    padding: 1rem;
+    border: 1px solid #ef4444;
+    background-color: #fee2e2; 
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+} 

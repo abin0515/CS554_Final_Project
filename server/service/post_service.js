@@ -33,12 +33,12 @@ export async function getPostById(postId) {
  * Create a new post
  * @param {string} title - the title of the post
  * @param {string} content - the content of the post
- * @param {string} image_url - the image URL
+ * @param {string[]} image_urls - Array of image URLs
  * @param {string} user_id - the ID of the user creating the post
  * @param {number} type - the type of post
  * @returns {Promise<Object>} - the newly created post
  */
-export async function createPost(title, content, image_url, user_id, type) {
+export async function createPost(title, content, image_urls, user_id, type) {
     // Validation and business logic
     if (!title || !content) {
         throw new Error('Title and content are required');
@@ -51,9 +51,12 @@ export async function createPost(title, content, image_url, user_id, type) {
     if (title.length < 3) {
         throw new Error('Title must be at least 3 characters long');
     }
+
+    // Ensure image_urls is an array, even if empty
+    const urlsToSave = Array.isArray(image_urls) ? image_urls : [];
     
     // Call data layer to persist the post
-    return await postData.createPostInDB(title, content, image_url, user_id, type);
+    return await postData.createPostInDB(title, content, urlsToSave, user_id, type);
 }
 
 /**

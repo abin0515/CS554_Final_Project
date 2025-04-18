@@ -27,19 +27,18 @@ export async function getPostByIdFromDB(postId) {
  * Create a new post in the database
  * @param {string} title - the title of the post
  * @param {string} content - the content of the post
- * @param {string} image_url - the image url of the post
+ * @param {string[]} image_urls - Array of image url strings
  * @param {string} user_id - the user id of the post
  * @param {number} type - the type of the post
  * @returns {Promise<Object>} - the new post
  */
-export async function createPostInDB(title, content, image_url, user_id, type) {
+export async function createPostInDB(title, content, image_urls, user_id, type) {
     // Create new post object
     const newPost = {
         title: title || "",
         content: content || "",
-        image_url: image_url || "",
+        image_urls: Array.isArray(image_urls) ? image_urls : [], // Store array of URLs
         user_id: user_id,
-        use_id: user_id, // For schema compatibility
         latest_reply_id: 0,
         type: type,
         total_like_times: 0,

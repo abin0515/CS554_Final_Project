@@ -1,0 +1,187 @@
+/* Styles for CreatePost component */
+
+.create-post-container {
+  padding: 1rem;
+  background-color: #fff; /* White background for the form area */
+  border: 1px solid #e5e7eb; /* Light border */
+  border-radius: 0.375rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.create-post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f0f0f0; /* Separator line */
+}
+
+.create-post-title-input {
+  flex-grow: 1; /* Allow input to take available space */
+  border: none;
+  font-size: 1.5rem; /* Larger font for title */
+  padding: 0.5rem;
+  outline: none; /* Remove default focus outline */
+  margin-right: 1rem;
+}
+
+.create-post-actions-top {
+  display: flex;
+  gap: 0.5rem; /* Space between buttons */
+}
+
+.cancel-button, .post-button, .topic-button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.cancel-button {
+  background-color: #f3f4f6; /* Light gray */
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.cancel-button:hover {
+  background-color: #e5e7eb;
+}
+
+.post-button {
+  background-color: #10b981; /* Emerald green */
+  color: white;
+}
+
+.post-button:hover {
+  background-color: #059669;
+}
+
+.topic-button {
+  background-color: #f0f8ff; /* Alice blue like */
+  color: #60a5fa; /* Light blue text */
+  border-color: #dbeafe;
+  font-weight: 500;
+}
+
+.topic-button:hover {
+  background-color: #e0f2fe;
+}
+
+.create-post-topic {
+  margin-bottom: 0.5rem;
+}
+
+/* Remove toolbar style if no longer needed */
+/* .create-post-toolbar { ... } */
+
+/* Styles for Image Upload */
+.image-upload-section {
+  margin-bottom: 1rem; /* Space below image uploader */
+  padding: 0.5rem;
+  border: 1px dashed #d1d5db; /* Dashed border */
+  border-radius: 0.25rem;
+  text-align: center;
+  background-color: #f9fafb;
+}
+
+.image-upload-label {
+  cursor: pointer;
+  color: #3b82f6; /* Blue text */
+  font-weight: 500;
+  display: inline-block; /* Allow padding/margin */
+  padding: 0.5rem 1rem;
+}
+
+.image-upload-label:hover {
+  text-decoration: underline;
+}
+
+/* Hide the actual file input visually */
+.image-upload-input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+/* New style for the grid container */
+.image-previews-grid {
+  display: flex; 
+  flex-wrap: wrap; /* Allow items to wrap to the next line */
+  gap: 0.75rem; /* Space between preview items */
+  margin-top: 1rem; /* Space above the grid */
+  justify-content: center; /* Center previews if they don't fill the row */
+}
+
+.image-preview-container {
+  /* Remove margin-top as grid gap handles spacing */
+  position: relative; 
+  display: inline-block; 
+}
+
+.image-preview {
+  max-width: 100%; /* Prevent image exceeding container width */
+  max-height: 200px; /* Limit preview height */
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+}
+
+.remove-image-button {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%; /* Make it round */
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  line-height: 22px; /* Adjust for vertical centering */
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.remove-image-button:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.create-post-content-input {
+  width: 100%; /* Use 100% to account for padding/border */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical; /* Allow vertical resize */
+  margin-bottom: 1rem;
+}
+
+.create-post-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Ensure error message has margin */
+.create-post-error {
+  margin-top: 1rem;
+}
+
+/* Disabled button styles */
+.cancel-button:disabled,
+.post-button:disabled,
+.topic-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+} 

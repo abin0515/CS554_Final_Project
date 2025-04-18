@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
+import './PostDetail.css'; // Import CSS file
 
 function PostDetail() {
   const [searchParams] = useSearchParams();
@@ -51,12 +52,46 @@ function PostDetail() {
     return <div>Post not found.</div>;
   }
 
+  // Construct full image URLs if paths are relative
+  const getImageFullUrl = (relativePath) => {
+    // Check if it's already an absolute URL (http/https)
+    if (relativePath.startsWith('http')) {
+      return relativePath;
+    } 
+    // Otherwise, prepend the API base URL (ensure no double slashes)
+    return `${API_BASE_URL.replace(/\/$/, '')}/${relativePath.replace(/^\//, '')}`;
+  };
+
   return (
     <div className="post-detail-container"> 
       <h1 className="post-detail-title">{post.title}</h1>
-      {post.image_url && 
-        <img src={post.image_url} alt={post.title} className="post-detail-image" />
-      }
+      
+      {/* Render image gallery if image_urls exist and is an array */}
+      {Array.isArray(post.image_urls) && post.image_urls.length > 0 && (
+        <div className="post-detail-image-gallery">
+          {post.image_urls.map((url, index) => (
+            <img 
+              key={index} 
+              // Assuming the stored URL is relative like '/uploads/posts/...'
+              // If already absolute, this function handles it.
+              src={getImageFullUrl(url)} 
+              alt={`${post.title} - Image ${index + 1}`} 
+              className="post-detail-image" 
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Render single image if only image_url exists (for backward compatibility?) */}
+      {/* You might remove this block if all posts will have image_urls */}
+      {/* {!Array.isArray(post.image_urls) && post.image_url && (
+        <img 
+          src={getImageFullUrl(post.image_url)} 
+          alt={post.title} 
+          className="post-detail-image" 
+        />
+      )} */}
+
       <div className="post-detail-content">{post.content}</div>
       <div className="post-detail-meta">
         <span>Likes: {post.total_like_times}</span>

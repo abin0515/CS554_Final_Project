@@ -9,6 +9,7 @@ import './App.css';
 import Layout from './components/Layout';
 import PostList from './components/PostList';
 import PostDetail from './components/PostDetail';
+import CreatePost from './components/CreatePost';
 
 function App() {
   return (
@@ -23,6 +24,9 @@ function App() {
           
           {/* Route for post details */}
           <Route path="posts/detail" element={<PostDetail />} />
+          
+          {/* Add route for creating posts */}
+          <Route path="posts/create" element={<CreatePost />} />
           
           {/* Add other routes that should use the Layout here */}
           {/* Example: <Route path="profile" element={<UserProfile />} /> */}

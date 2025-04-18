@@ -1,10 +1,15 @@
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom'; // Import Outlet and useLocation
-import '../App.css'; // Assuming App.css contains layout styles
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'; // Import Outlet, useLocation, and useNavigate
+import './Layout.css'; // Import the dedicated Layout CSS file
 
 function Layout() {
   // Get the current location object
   const location = useLocation();
+  const navigate = useNavigate(); // Get the navigate function
+
+  const handleCreateClick = () => {
+    navigate('/posts/create'); // Navigate to the create post route
+  };
 
   return (
     <div className="app-container">
@@ -21,10 +26,16 @@ function Layout() {
 
         {/* Main Content */}
         <div className="app-main">
-          {/* Conditionally render tabs based on pathname */}
-          {location.pathname !== '/posts/detail' && (
+          {/* Show button only on the main PostList page ('/') */}
+          {location.pathname === '/' && (
             <div className="app-tabs">
-              Tabs Area
+              {/* Add onClick handler */}
+              <button 
+                className="create-post-button"
+                onClick={handleCreateClick} 
+              >
+                create post
+              </button>
             </div>
           )}
           <div className="app-content">
