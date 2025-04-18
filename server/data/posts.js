@@ -61,34 +61,48 @@ export async function createPostInDB(title, content, image_urls, user_id, type) 
 /**
  * Update a post in the database
  * @param {string} postId - the ID of the post to update
- * @param {Object} updateData - object containing fields to update
+ * @param {Object} updateData - object containing fields to update (e.g., title, content, image_urls)
  * @returns {Promise<Object>} - the updated post
  */
 export async function updatePostInDB(postId, updateData) {
-    // Build update document
-    const updateInfo = {
-        update_time: new Date()
-    };
-    
-    if (updateData.title) {
-        updateInfo.title = updateData.title;
+    // Build update document dynamically based on provided fields
+    const updateFields = {};
+    if (updateData.title !== undefined) {
+        updateFields.title = updateData.title;
     }
-    
-    if (updateData.content) {
-        updateInfo.content = updateData.content;
+    if (updateData.content !== undefined) {
+        updateFields.content = updateData.content;
     }
+    if (updateData.image_urls !== undefined) {
+        // Ensure it's an array before saving
+        updateFields.image_urls = Array.isArray(updateData.image_urls) ? updateData.image_urls : [];
+    }
+
+    // Only proceed if there are fields to update
+    if (Object.keys(updateFields).length === 0) {
+        // Maybe return the existing post or throw an error?
+        // Returning existing post seems reasonable if nothing changed.
+        return await getPostByIdFromDB(postId); 
+        // Or: throw new Error('No fields provided for update');
+    }
+
+    // Add update_time
+    updateFields.update_time = new Date();
     
     // Update the post
     const result = await postsCollection.updateOne(
         { _id: new ObjectId(postId) },
-        { $set: updateInfo }
+        { $set: updateFields } // Use the dynamically built update object
     );
     
-    if (result.modifiedCount === 0) {
-        throw new Error('Could not update post');
+    // Check if *anything* was modified or if the document matched
+    // If the data sent is identical to existing data, modifiedCount will be 0 
+    // but matchedCount will be 1. This isn't necessarily an error.
+    if (result.matchedCount === 0) {
+        throw new Error('Could not find post to update');
     }
     
-    // Return the updated post
+    // Return the potentially updated post
     return await getPostByIdFromDB(postId);
 }
 

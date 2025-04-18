@@ -30,62 +30,100 @@ export async function getPostById(postId) {
 }
 
 /**
- * Create a new post
+ * Create a new post (without images initially)
  * @param {string} title - the title of the post
  * @param {string} content - the content of the post
- * @param {string[]} image_urls - Array of image URLs
  * @param {string} user_id - the ID of the user creating the post
  * @param {number} type - the type of post
- * @returns {Promise<Object>} - the newly created post
+ * @returns {Promise<Object>} - the newly created post object (including _id)
  */
-export async function createPost(title, content, image_urls, user_id, type) {
+export async function createPost(title, content, user_id, type) {
     // Validation and business logic
     if (!title || !content) {
         throw new Error('Title and content are required');
     }
-    
     if (!user_id) {
         throw new Error('User ID is required');
     }
-    
     if (title.length < 3) {
         throw new Error('Title must be at least 3 characters long');
     }
 
-    // Ensure image_urls is an array, even if empty
-    const urlsToSave = Array.isArray(image_urls) ? image_urls : [];
+    // Initial image_urls will be empty
+    const initialImageUrls = [];
     
     // Call data layer to persist the post
-    return await postData.createPostInDB(title, content, urlsToSave, user_id, type);
+    // This now returns the full post object including the generated _id
+    const newPost = await postData.createPostInDB(title, content, initialImageUrls, user_id, type);
+    return newPost;
+}
+
+/**
+ * Adds image URLs to an existing post.
+ * @param {string} postId - The ID of the post to update.
+ * @param {string} userId - The ID of the user performing the action (for permission check).
+ * @param {string[]} imageUrls - Array of image URLs to add.
+ * @returns {Promise<Object>} - The updated post object.
+ */
+export async function addImagesToPost(postId, userId, imageUrls) {
+    if (!postId || !userId) {
+        throw new Error('Post ID and User ID are required to add images.');
+    }
+    if (!Array.isArray(imageUrls)) {
+        throw new Error('imageUrls must be an array.');
+    }
+
+    // Optional but recommended: Check permissions again
+    const post = await postData.getPostByIdFromDB(postId); 
+    if (post.user_id.toString() !== userId) {
+        throw new Error('You do not have permission to add images to this post');
+    }
+
+    // Call data layer to update the post with image URLs
+    return await postData.updatePostInDB(postId, { image_urls: imageUrls });
 }
 
 /**
  * Edit an existing post
  * @param {string} postId - the ID of the post to edit
- * @param {string} user_id - the ID of the user making the edit
- * @param {string} title - the new title
- * @param {string} content - the new content
+ * @param {string} user_id - the ID of the user making the edit (for permission check)
+ * @param {Object} updatePayload - Object containing fields to update (title, content, image_urls)
  * @returns {Promise<Object>} - the updated post
  */
-export async function editPost(postId, user_id, title, content) {
+export async function editPost(postId, user_id, updatePayload) {
     // Validation logic
     if (!postId || !user_id) {
-        throw new Error('Post ID and user ID are required');
+        throw new Error('Post ID and user ID are required for editing');
     }
-    
-    if (!title && !content) {
-        throw new Error('At least one of title or content must be provided');
+
+    // Check if at least one field to update is provided
+    const { title, content, image_urls } = updatePayload;
+    if (title === undefined && content === undefined && image_urls === undefined) {
+        throw new Error('No fields provided for update (title, content, or image_urls)');
+    }
+
+    // Validate title length if provided
+    if (title !== undefined && title.length < 3) {
+         throw new Error('Title must be at least 3 characters long');
     }
     
     // Check if post exists and if user has permission
     const post = await postData.getPostByIdFromDB(postId);
-    
-    if (post.user_id.toString() !== user_id) {
+    if (post.user_id.toString() !== user_id) { // Assuming user_id is stored as string
         throw new Error('You do not have permission to edit this post');
     }
     
+    // Prepare the update object for the data layer
+    const fieldsToUpdate = {};
+    if (title !== undefined) fieldsToUpdate.title = title;
+    if (content !== undefined) fieldsToUpdate.content = content;
+    if (image_urls !== undefined) {
+         // Ensure it's an array before passing to data layer
+         fieldsToUpdate.image_urls = Array.isArray(image_urls) ? image_urls : [];
+    }
+    
     // Call data layer to update the post
-    return await postData.updatePostInDB(postId, { title, content });
+    return await postData.updatePostInDB(postId, fieldsToUpdate);
 }
 
 /**

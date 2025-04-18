@@ -81,72 +81,38 @@ function CreatePost() {
 
     setLoading(true);
 
-    let uploadedImageUrls = []; // Use this to store URLs from backend
+    // Create FormData to send everything in one request
+    const formData = new FormData();
 
-    // Step 1: Upload images if present
-    if (imageFiles.length > 0) {
-      const formData = new FormData();
-      // IMPORTANT: Append userId BEFORE files if needed for filename generation by multer
-      const userId = '2001'; // TODO: Get actual user ID
-      formData.append('userId', userId);
+    // Append text data
+    formData.append('title', title);
+    formData.append('content', content);
+    formData.append('user_id', '2001'); // TODO: Replace with actual user ID
+    formData.append('type', '1'); // TODO: Get actual type if needed
 
-      imageFiles.forEach((file) => {
-        // Use 'postImages' to match the field name in upload.array() in uploads.js
+    // Append image files
+    imageFiles.forEach((file) => {
+        // Use 'postImages' to match the field name expected by multer on backend
         formData.append('postImages', file);
-      });
-
-      try {
-        // Send files to the upload endpoint
-        const uploadResponse = await fetch(`${API_BASE_URL}/uploads/posts`, {
-          method: 'POST',
-          body: formData, 
-          // Note: Do NOT set Content-Type header for FormData, 
-          // the browser sets it correctly including the boundary.
-        });
-
-        const uploadResult = await uploadResponse.json();
-
-        if (!uploadResponse.ok || !uploadResult.success) {
-          throw new Error(uploadResult.error || 'Image upload failed on server.');
-        }
-        
-        uploadedImageUrls = uploadResult.imageUrls; // Get the array of URLs from the response
-        console.log('Uploaded image URLs:', uploadedImageUrls);
-
-      } catch (uploadError) {
-        setError(`Image upload failed: ${uploadError.message}`);
-        setLoading(false);
-        return; // Stop submission if upload fails
-      }
-    }
-
-    // Step 2: Create the post with text data and image URLs
-    const userId = '2001'; 
-    const postType = 1; 
+    });
 
     try {
-      const createPostResponse = await fetch(`${API_BASE_URL}/posts/createPost`, {
+      // Send combined data to the createPost endpoint
+      const response = await fetch(`${API_BASE_URL}/posts/createPost`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: title,
-          content: content,
-          image_urls: uploadedImageUrls, // Send the array of URLs received from upload
-          user_id: userId,
-          type: postType,
-        }),
+        body: formData,
+        // No 'Content-Type' header for FormData - browser sets it
       });
 
-      const createResult = await createPostResponse.json();
+      const result = await response.json();
 
-      if (!createPostResponse.ok) {
-        throw new Error(createResult.error || `HTTP error! status: ${createPostResponse.status}`);
+      if (!response.ok) {
+        // Use error message from backend if available
+        throw new Error(result.error || `HTTP error! status: ${response.status}`);
       }
 
-      console.log('Post created:', createResult);
-      navigate('/');
+      console.log('Post created successfully:', result);
+      navigate('/'); // Navigate to home/post list on success
 
     } catch (e) {
       setError(e.message);

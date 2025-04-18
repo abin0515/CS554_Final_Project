@@ -10,6 +10,7 @@ import Layout from './components/Layout';
 import PostList from './components/PostList';
 import PostDetail from './components/PostDetail';
 import CreatePost from './components/CreatePost';
+import EditPost from './components/EditPost';
 
 function App() {
   return (
@@ -27,6 +28,9 @@ function App() {
           
           {/* Add route for creating posts */}
           <Route path="posts/create" element={<CreatePost />} />
+          
+          {/* Add route for editing posts */}
+          <Route path="posts/edit" element={<EditPost />} />
           
           {/* Add other routes that should use the Layout here */}
           {/* Example: <Route path="profile" element={<UserProfile />} /> */}

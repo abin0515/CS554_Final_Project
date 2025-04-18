@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
 import './PostDetail.css'; // Import CSS file
 
@@ -9,6 +9,69 @@ function PostDetail() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(prev => !prev);
+  };
+
+  const handleEdit = () => {
+    navigate(`/posts/edit?postId=${postId}`);
+    setIsDropdownOpen(false);
+  };
+
+  const handleDelete = async () => {
+    setIsDropdownOpen(false);
+    if (window.confirm('Are you sure you want to delete this post and all its associated images?')) {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`${API_BASE_URL}/posts/removePost?postId=${postId}`, {
+          method: 'DELETE',
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || `Failed to delete post: ${response.statusText}`);
+        }
+
+        console.log('Post deleted successfully', result.message);
+        navigate('/');
+
+      } catch (e) {
+        setError(`Delete failed: ${e.message}`);
+        console.error("Delete error:", e);
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        if (!event.target.closest('.more-options-button')) {
+           setIsDropdownOpen(false);
+        }
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   useEffect(() => {
     if (!postId) {
@@ -26,7 +89,6 @@ function PostDetail() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        // Assuming the direct response is the post object or { post: postObject }
         setPost(data.post || data);
       } catch (e) {
         setError(e.message);
@@ -44,7 +106,6 @@ function PostDetail() {
   }
 
   if (error) {
-    // Use a specific class for styling errors
     return <div className="error-message">Error: {error}</div>;
   }
 
@@ -52,28 +113,47 @@ function PostDetail() {
     return <div>Post not found.</div>;
   }
 
-  // Construct full image URLs if paths are relative
   const getImageFullUrl = (relativePath) => {
-    // Check if it's already an absolute URL (http/https)
     if (relativePath.startsWith('http')) {
       return relativePath;
     } 
-    // Otherwise, prepend the API base URL (ensure no double slashes)
     return `${API_BASE_URL.replace(/\/$/, '')}/${relativePath.replace(/^\//, '')}`;
   };
 
   return (
     <div className="post-detail-container"> 
+      <div className="post-detail-top-actions">
+        <button onClick={handleBack} className="back-button" title="Go Back">
+          &lt;
+        </button>
+        <div className="more-options-container">
+          <button 
+            onClick={toggleDropdown} 
+            className="more-options-button" 
+            title="More Options"
+          >
+            &#8943;
+          </button>
+          {isDropdownOpen && (
+            <div className="options-dropdown" ref={dropdownRef}>
+              <button onClick={handleEdit} className="dropdown-button edit-button">
+                Edit
+              </button>
+              <button onClick={handleDelete} className="dropdown-button delete-button">
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       <h1 className="post-detail-title">{post.title}</h1>
       
-      {/* Render image gallery if image_urls exist and is an array */}
       {Array.isArray(post.image_urls) && post.image_urls.length > 0 && (
         <div className="post-detail-image-gallery">
           {post.image_urls.map((url, index) => (
             <img 
               key={index} 
-              // Assuming the stored URL is relative like '/uploads/posts/...'
-              // If already absolute, this function handles it.
               src={getImageFullUrl(url)} 
               alt={`${post.title} - Image ${index + 1}`} 
               className="post-detail-image" 
@@ -82,16 +162,6 @@ function PostDetail() {
         </div>
       )}
 
-      {/* Render single image if only image_url exists (for backward compatibility?) */}
-      {/* You might remove this block if all posts will have image_urls */}
-      {/* {!Array.isArray(post.image_urls) && post.image_url && (
-        <img 
-          src={getImageFullUrl(post.image_url)} 
-          alt={post.title} 
-          className="post-detail-image" 
-        />
-      )} */}
-
       <div className="post-detail-content">{post.content}</div>
       <div className="post-detail-meta">
         <span>Likes: {post.total_like_times}</span>
@@ -99,7 +169,6 @@ function PostDetail() {
         <span>Created: {new Date(post.create_time).toLocaleString()}</span>
         <span>Updated: {new Date(post.update_time).toLocaleString()}</span>
       </div>
-      {/* Add comments/replies section here later */}
     </div>
   );
 }
