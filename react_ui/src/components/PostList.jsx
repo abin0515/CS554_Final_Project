@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // Import Link
 import { API_BASE_URL } from '../config'; // Import the base URL
 import './PostList.css'; // Import the CSS file
 
@@ -50,7 +51,9 @@ function PostList() {
       {posts.length > 0 ? (
         posts.map((post) => (
           <div key={post._id} className="post-item">
-            <h3 className="post-title">{post.title}</h3>
+            <Link to={`/posts/detail?postId=${post._id}`} className="post-title-link">
+              <h3 className="post-title">{post.title}</h3>
+            </Link>
             <p className="post-content">
               {post.content} 
             </p>
