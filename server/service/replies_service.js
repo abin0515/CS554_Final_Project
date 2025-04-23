@@ -6,8 +6,7 @@ import {
     createReplyInDB,
     getReplyByIdFromDB,
     incrementReplyCountInDB,
-    getRepliesByPostIdFromDB,
-    getSubRepliesByAnswerIdFromDB
+    getRepliesByPostIdFromDB
 } from '../data/replies.js';
 import {
     getPostByIdFromDB,

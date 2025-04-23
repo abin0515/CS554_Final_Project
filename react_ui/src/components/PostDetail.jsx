@@ -412,27 +412,34 @@ function PostDetail() {
 
         // IMPORTANT: We are NOT adding the sub-reply to the top-level 'replies' state here.
         // We need to update the parent reply's reply_times count instead.
-        setReplies(prevReplies => prevReplies.map(r =>
-            r._id === parentReply._id
-             ? { ...r, reply_times: (r.reply_times || 0) + 1 }
+        setReplies(prevReplies => prevReplies.map(r => 
+            r._id === parentReply._id 
+             ? { ...r, reply_times: (r.reply_times || 0) + 1 } 
              : r
         ));
 
-        // Modify success part to potentially refresh sub-replies if visible
-        if (visibleSubRepliesId === parentReply._id && result.reply) {
-            setSubRepliesData(prev => ({
-                ...prev,
-                [parentReply._id]: {
-                    ...prev[parentReply._id],
-                    list: [...(prev[parentReply._id]?.list || []), result.reply] // Add new sub-reply
+        // Always update the stored sub-reply data if it exists, regardless of visibility
+        if (result.reply) {
+            setSubRepliesData(prev => {
+                const parentId = parentReply._id;
+                if (prev[parentId]) { // Only update if we have data loaded for this parent
+                    return {
+                        ...prev,
+                        [parentId]: {
+                            ...prev[parentId],
+                            // Add the new reply, maintaining sort order (oldest first)
+                            list: [...(prev[parentId].list || []), result.reply] 
+                        }
+                    };
                 }
-            }));
-        } else if (visibleSubRepliesId === parentReply._id) {
-            // If visible but reply object wasn't returned, refetch to be safe
-            fetchSubReplies(parentReply._id);
+                return prev; // Otherwise, don't change the state
+            });
         }
 
         setTimeout(() => setMainReplySuccess(null), 3000);
+
+        // Force a full page reload after successful sub-reply submission
+        window.location.reload();
 
      } catch (e) {
         setMainReplyError(`Sub-reply failed: ${e.message}`);
@@ -594,7 +601,7 @@ function PostDetail() {
                             onCancel={() => setReplyingToId(null)} 
                             parentReplyAuthor={reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`}
                             isLoading={isSubmittingMainReply} 
-                            submitButtonText="Submit Sub-Reply"
+                            submitButtonText="Submit Reply"
                         />
                     )}
 
@@ -611,19 +618,42 @@ function PostDetail() {
                                         <div className="reply-header">
                                             <span className="reply-author">
                                                 {subReply.anonymity ? 'Anonymous' : `User ${subReply.user_id}`}
-                                                {/* Optionally show who they replied to */}
-                                                {subReply.target_user_id && 
-                                                    <> replied to {subReply.target_reply_id === reply._id 
-                                                                    ? (reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`) 
-                                                                    : 'another user'} 
-                                                    </> /* More complex logic needed if showing deeper nesting targets */}
+                                                {/* Show who they replied to, based on target_user_id */}
+                                                {subReply.target_reply_id && // Check if it's replying to a specific reply ID
+                                                    <> replied to {subReply.target_user_id 
+                                                                    ? `User ${subReply.target_user_id}` // Display target user ID if available
+                                                                    : 'Anonymous User'}             {/* Otherwise assume target was anonymous */}
+                                                    </>
+                                                }
                                             </span>
                                             <span className="reply-timestamp">
                                                 {new Date(subReply.create_time).toLocaleString()}
                                             </span>
                                         </div>
                                         <div className="reply-content">{subReply.content}</div>
-                                        {/* Add actions for sub-replies if needed */}
+                                        {/* Add actions for sub-replies */}
+                                        <div className="reply-actions sub-reply-actions">
+                                            <button className="reply-action-button like-button" title="Like">
+                                                Like ({subReply.liked_times || 0})
+                                            </button>
+                                            <button
+                                                className="reply-action-button reply-to-reply-button"
+                                                title="Reply to this comment"
+                                                onClick={() => handleToggleReplyForm(subReply._id)} // Toggle form for this sub-reply
+                                            >
+                                                Reply
+                                            </button>
+                                        </div>
+                                        {/* Conditionally render the Reply Form for this sub-reply */} 
+                                        {replyingToId === subReply._id && (
+                                            <ReplyForm
+                                                onSubmit={(content, isAnonymous) => handleSubmitSubReply(subReply, content, isAnonymous)} // Pass subReply as parentReply
+                                                onCancel={() => setReplyingToId(null)} 
+                                                parentReplyAuthor={subReply.anonymity ? 'Anonymous User' : `User ${subReply.user_id}`} 
+                                                isLoading={isSubmittingMainReply} 
+                                                submitButtonText="Submit Reply" // Keep button text simple
+                                            />
+                                        )}
                                     </div>
                                 )))
                             )}
