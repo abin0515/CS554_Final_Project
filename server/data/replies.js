@@ -90,4 +90,40 @@ export const getRepliesByPostIdFromDB = async (postId) => {
     });
 };
 
+/**
+ * Retrieves sub-replies for a given top-level answer ID within a post, sorted by creation time (oldest first).
+ * @param {string} postId - The ID of the post.
+ * @param {string} answerId - The ID of the top-level answer reply.
+ * @returns {Promise<Array<object>>} An array of sub-reply objects.
+ */
+export const getSubRepliesByAnswerIdFromDB = async (postId, answerId) => {
+    // Validate IDs
+    // if (!ObjectId.isValid(postId)) {
+    //     throw new Error(`Invalid Post ID format: ${postId}`);
+    // }
+    // if (!ObjectId.isValid(answerId)) {
+    //     throw new Error(`Invalid Answer ID format: ${answerId}`);
+    // }
+
+    const subReplies = await repliesCollection
+        .find({
+            post_id: postId,
+            answer_id: answerId,
+            // Exclude the answer itself
+        })
+        .sort({ create_time: 1 }) // Sort by oldest first for conversation flow
+        .toArray();
+
+    // Convert ObjectIds to strings
+    return subReplies.map(reply => {
+        reply._id = reply._id.toString();
+        if(reply.post_id) reply.post_id = reply.post_id.toString();
+        if(reply.user_id) reply.user_id = reply.user_id.toString();
+        if(reply.answer_id) reply.answer_id = reply.answer_id.toString();
+        if(reply.parent_reply_id) reply.parent_reply_id = reply.parent_reply_id.toString();
+        if(reply.target_user_id) reply.target_user_id = reply.target_user_id.toString();
+        return reply;
+    });
+};
+
 // Add other data functions as needed (e.g., deleteReplyFromDB)

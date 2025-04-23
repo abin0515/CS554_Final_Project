@@ -311,4 +311,49 @@
   white-space: pre-wrap; /* Preserve line breaks */
 }
 
-/* Add styles for reply action buttons later */ 
+/* Add styles for reply action buttons later */
+
+/* Sub-Reply List Styles */
+.sub-replies-container {
+  margin-top: 15px;
+  padding-left: 25px; /* Indent sub-replies */
+  padding-top: 10px;
+  border-left: 2px solid #e5e7eb; /* Add a left border for visual hierarchy */
+}
+
+.sub-reply-item {
+  background-color: #f9fafb; /* Slightly different background for sub-replies */
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.sub-reply-item:last-child {
+  margin-bottom: 0;
+}
+
+.sub-reply-item .reply-header {
+  /* Adjust sub-reply header styles if needed */
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+.sub-reply-item .reply-author {
+  font-size: 0.9em; 
+}
+
+.sub-reply-item .reply-timestamp {
+  font-size: 0.75em;
+}
+
+.sub-reply-item .reply-content {
+  font-size: 0.9em;
+}
+
+.no-sub-replies {
+    padding: 10px 0;
+    color: #6b7280;
+    font-style: italic;
+    font-size: 0.9em;
+} 

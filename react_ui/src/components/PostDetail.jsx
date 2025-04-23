@@ -10,6 +10,88 @@ const getCurrentUserId = () => {
   return localStorage.getItem('userId') || '2001'; // Replace placeholder ID
 };
 
+// Reusable Reply Form Component (Optional but good practice)
+// You could move this to a separate file later
+const ReplyForm = ({
+    onSubmit,
+    onCancel,
+    parentReplyAuthor, // Display 'Replying to X'
+    isLoading,
+    initialContent = '',
+    initialAnonymous = false,
+    submitButtonText = 'Submit Reply',
+    cancelButtonText = 'Cancel'
+}) => {
+    const [content, setContent] = useState(initialContent);
+    const [isAnonymous, setIsAnonymous] = useState(initialAnonymous);
+    const [error, setError] = useState(null);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setError(null);
+        if (content.trim().length === 0) {
+            setError('Reply content cannot be empty.');
+            return;
+        }
+        if (content.length > 500) {
+            setError('Reply content cannot exceed 500 characters.');
+            return;
+        }
+        // Pass content and anonymity state back up to the parent handler
+        onSubmit(content, isAnonymous);
+    };
+
+    return (
+        <div className="reply-form-container sub-reply-form-container">
+            <textarea
+              className="reply-textarea"
+              placeholder={parentReplyAuthor ? `Replying to ${parentReplyAuthor}...` : "Share your thoughts..."}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              maxLength={500}
+              disabled={isLoading}
+              rows={3} // Make sub-reply box smaller initially
+            />
+            <div className="reply-form-footer">
+              <div className="reply-char-count">
+                {content.length}/500
+              </div>
+              <div className="reply-options">
+                <label className="anonymity-label">
+                  <input
+                    type="checkbox"
+                    checked={isAnonymous}
+                    onChange={(e) => setIsAnonymous(e.target.checked)}
+                    disabled={isLoading}
+                  />
+                  Reply anonymously
+                </label>
+                {onCancel && ( // Only show Cancel for sub-replies
+                    <button
+                        type="button"
+                        className="cancel-reply-button"
+                        onClick={onCancel}
+                        disabled={isLoading}
+                    >
+                       {cancelButtonText}
+                    </button>
+                )}
+                <button
+                  type="button" // Use type="button" to prevent default form submission if wrapped in <form>
+                  className="submit-reply-button"
+                  onClick={handleSubmit}
+                  disabled={isLoading || content.trim().length === 0}
+                >
+                  {isLoading ? 'Submitting...' : submitButtonText}
+                </button>
+              </div>
+            </div>
+             {error && <div className="error-message reply-error">{error}</div>}
+             {/* Success message handled by parent component */}
+        </div>
+    );
+};
+
 function PostDetail() {
   const [searchParams] = useSearchParams();
   const postId = searchParams.get('postId');
@@ -20,17 +102,25 @@ function PostDetail() {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
-  // State for the reply form
-  const [replyContent, setReplyContent] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
-  const [replyError, setReplyError] = useState(null);
-  const [replySuccess, setReplySuccess] = useState(null);
+  // State for the MAIN reply form (replying directly to post)
+  // const [mainReplyContent, setMainReplyContent] = useState(''); // No longer needed, ReplyForm handles its state
+  // const [mainReplyIsAnonymous, setMainReplyIsAnonymous] = useState(false); // No longer needed
+  const [isSubmittingMainReply, setIsSubmittingMainReply] = useState(false);
+  const [mainReplyError, setMainReplyError] = useState(null);
+  const [mainReplySuccess, setMainReplySuccess] = useState(null);
 
   // State for displaying replies
   const [replies, setReplies] = useState([]);
   const [repliesLoading, setRepliesLoading] = useState(true);
   const [repliesError, setRepliesError] = useState(null);
+
+  // State for SUB-REPLY form (replying to a specific reply)
+  const [replyingToId, setReplyingToId] = useState(null); // ID of the reply being replied to
+  // No need for separate sub-reply content/anonymity state if using the ReplyForm component
+
+  // State for showing/hiding and storing sub-replies
+  const [visibleSubRepliesId, setVisibleSubRepliesId] = useState(null); // ID of the direct reply whose sub-replies are visible
+  const [subRepliesData, setSubRepliesData] = useState({}); // Stores { [parentReplyId]: { loading, error, list } }
 
   const handleBack = () => {
     navigate(-1);
@@ -71,6 +161,70 @@ function PostDetail() {
       }
     }
   };
+
+  // --- Toggle Sub-Reply Form ---
+  const handleToggleReplyForm = (replyId) => {
+      setReplyingToId(currentId => (currentId === replyId ? null : replyId));
+      // Reset main form messages if user interacts with sub-reply
+      setMainReplyError(null);
+      setMainReplySuccess(null);
+      // Close sub-reply list if opening form for same reply
+      // setVisibleSubRepliesId(null); // Optional: Decide if opening reply form should hide sub-replies
+  };
+
+  // --- Fetch Sub-Replies --- 
+  const fetchSubReplies = async (answerId) => {
+      if (!postId || !answerId) return;
+      // Set loading state specifically for this answerId
+      setSubRepliesData(prev => ({ 
+          ...prev, 
+          [answerId]: { loading: true, error: null, list: prev[answerId]?.list || [] } 
+      }));
+
+      try {
+          const response = await fetch(`${API_BASE_URL}/replies/subReplies/${postId}/${answerId}`);
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          if (data.success && Array.isArray(data.subReplies)) {
+              // Update state with fetched sub-replies
+              setSubRepliesData(prev => ({ 
+                  ...prev, 
+                  [answerId]: { loading: false, error: null, list: data.subReplies } 
+              }));
+          } else {
+              throw new Error(data.error || 'Failed to fetch sub-replies or unexpected format.');
+          }
+      } catch (e) {
+          console.error(`Error fetching sub-replies for ${answerId}:`, e);
+          // Update state with error
+          setSubRepliesData(prev => ({ 
+              ...prev, 
+              [answerId]: { loading: false, error: e.message, list: [] } 
+          }));
+      }
+  };
+  // --- End Fetch Sub-Replies ---
+
+  // --- Toggle Sub-Replies Visibility ---
+  const handleToggleSubReplies = (directReplyId) => {
+      const isCurrentlyVisible = visibleSubRepliesId === directReplyId;
+      
+      if (isCurrentlyVisible) {
+          setVisibleSubRepliesId(null); // Hide
+      } else {
+          setVisibleSubRepliesId(directReplyId); // Show
+          // Fetch if not already loaded or loading
+          if (!subRepliesData[directReplyId]?.list && !subRepliesData[directReplyId]?.loading) {
+              fetchSubReplies(directReplyId);
+          }
+          // Close any open reply forms when showing sub-replies
+          setReplyingToId(null);
+      }
+  };
+  // --- End Toggle Sub-Replies Visibility ---
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -120,7 +274,7 @@ function PostDetail() {
     fetchPostDetail();
   }, [postId]);
 
-  // --- Fetch Replies --- 
+  // --- Fetch Replies ---
   const fetchReplies = async () => {
     if (!postId) return;
     setRepliesLoading(true);
@@ -133,6 +287,7 @@ function PostDetail() {
       }
       const data = await response.json();
       if (data.success && Array.isArray(data.replies)) {
+        console.log('Fetched replies data:', data.replies); // Log the received replies array
         setReplies(data.replies);
       } else {
           throw new Error(data.error || 'Failed to fetch replies or unexpected format.');
@@ -147,46 +302,29 @@ function PostDetail() {
 
   // --- End Fetch Replies ---
 
-  // --- Reply Form Handlers ---
-  const handleReplyChange = (event) => {
-    setReplyContent(event.target.value);
-  };
+  // --- Submit Handlers ---
 
-  const handleAnonymityChange = (event) => {
-    setIsAnonymous(event.target.checked);
-  };
-
-  const handleSubmitReply = async (event) => {
-    event.preventDefault(); // Prevent default form submission if wrapped in <form>
-    setIsSubmittingReply(true);
-    setReplyError(null);
-    setReplySuccess(null);
+  // Handles submitting the MAIN reply (direct to post)
+  const handleSubmitMainReply = async (content, isAnonymous) => {
+    setIsSubmittingMainReply(true);
+    setMainReplyError(null);
+    setMainReplySuccess(null);
+    setReplyingToId(null); // Close any open sub-reply forms
 
     const currentUserId = getCurrentUserId();
     if (!currentUserId) {
-        setReplyError('User not logged in.'); // Or handle appropriately
-        setIsSubmittingReply(false);
-        return;
-    }
-
-    if (replyContent.trim().length === 0) {
-        setReplyError('Reply content cannot be empty.');
-        setIsSubmittingReply(false);
-        return;
-    }
-
-    if (replyContent.length > 500) {
-        setReplyError('Reply content cannot exceed 500 characters.');
-        setIsSubmittingReply(false);
+        setMainReplyError('User not logged in.'); // Or handle appropriately
+        setIsSubmittingMainReply(false);
         return;
     }
 
     const replyData = {
         post_id: postId,
-        user_id: currentUserId, // Use the retrieved user ID
-        content: replyContent,
+        answer_id: null,
+        user_id: currentUserId,
+        content: content,
         anonymity: isAnonymous,
-        parent_reply_id: null, // Direct reply to post
+        target_reply_id: null, // Direct reply to post
         target_user_id: null   // Direct reply to post
     };
 
@@ -208,9 +346,9 @@ function PostDetail() {
            throw new Error(result.error || `Failed to submit reply: ${response.statusText}`);
        }
 
-       setReplySuccess('Reply submitted successfully!');
-       setReplyContent(''); 
-       setIsAnonymous(false); 
+       setMainReplySuccess('Reply submitted successfully!');
+       // setMainReplyContent(''); // No longer needed
+       // setMainReplyIsAnonymous(false); // No longer needed
        
        // Add the new reply to the top of the list
        if (result.reply) {
@@ -219,18 +357,93 @@ function PostDetail() {
        
        setPost(prevPost => ({ ...prevPost, reply_times: (prevPost.reply_times || 0) + 1 }));
        // Clear success message after a delay
-       setTimeout(() => setReplySuccess(null), 3000);
+       setTimeout(() => setMainReplySuccess(null), 3000);
 
     } catch (e) {
-        setReplyError(`Submit failed: ${e.message}`);
-        console.error("Reply submission error:", e);
+        setMainReplyError(`Submit failed: ${e.message}`);
+        console.error("Main reply submission error:", e);
         // Clear error message after a delay
-         setTimeout(() => setReplyError(null), 5000);
+         setTimeout(() => setMainReplyError(null), 5000);
     } finally {
-        setIsSubmittingReply(false);
+        setIsSubmittingMainReply(false);
     }
   };
-  // --- End Reply Form Handlers ---
+
+  // Handles submitting a SUB-REPLY (reply to another reply)
+  const handleSubmitSubReply = async (parentReply, content, isAnonymous) => {
+    // Note: We might want separate loading state for sub-replies later
+    setIsSubmittingMainReply(true); // Reuse main loading state for now
+    setMainReplyError(null); // Clear main messages
+    setMainReplySuccess(null);
+
+    const currentUserId = getCurrentUserId();
+    if (!currentUserId) {
+        setMainReplyError('User not logged in.'); // Or handle appropriately
+        setIsSubmittingMainReply(false);
+        return;
+    }
+
+    const replyData = {
+        post_id: postId, // Belongs to the same post
+        answer_id: parentReply.answer_id === null ? parentReply._id : parentReply.answer_id , // ID of the top-level answer reply
+        user_id: currentUserId,
+        content: content,
+        anonymity: isAnonymous,
+        target_reply_id: parentReply._id, // ID of the reply being replied to
+        target_user_id: parentReply.anonymity ? null : parentReply.user_id, // ID of the user being replied to
+    };
+
+     try {
+        const response = await fetch(`${API_BASE_URL}/replies/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Add Authorization header if needed
+                // 'Authorization': `Bearer ${your_auth_token}`
+            },
+            body: JSON.stringify(replyData),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Failed');
+
+        // Sub-reply submitted successfully!
+        setReplyingToId(null); // Close the form
+        setMainReplySuccess(`Reply to ${parentReply.anonymity ? 'Anonymous User' : `User ${parentReply.user_id}`} submitted!`); // Show success in main area
+
+        // IMPORTANT: We are NOT adding the sub-reply to the top-level 'replies' state here.
+        // We need to update the parent reply's reply_times count instead.
+        setReplies(prevReplies => prevReplies.map(r =>
+            r._id === parentReply._id
+             ? { ...r, reply_times: (r.reply_times || 0) + 1 }
+             : r
+        ));
+
+        // Modify success part to potentially refresh sub-replies if visible
+        if (visibleSubRepliesId === parentReply._id && result.reply) {
+            setSubRepliesData(prev => ({
+                ...prev,
+                [parentReply._id]: {
+                    ...prev[parentReply._id],
+                    list: [...(prev[parentReply._id]?.list || []), result.reply] // Add new sub-reply
+                }
+            }));
+        } else if (visibleSubRepliesId === parentReply._id) {
+            // If visible but reply object wasn't returned, refetch to be safe
+            fetchSubReplies(parentReply._id);
+        }
+
+        setTimeout(() => setMainReplySuccess(null), 3000);
+
+     } catch (e) {
+        setMainReplyError(`Sub-reply failed: ${e.message}`);
+        console.error("Sub-reply submission error:", e);
+        setTimeout(() => setMainReplyError(null), 5000);
+     } finally {
+         setIsSubmittingMainReply(false); // Reuse main loading state
+     }
+  };
+
+  // --- End Submit Handlers ---
 
   // Effect to fetch replies
    useEffect(() => {
@@ -256,6 +469,9 @@ function PostDetail() {
     } 
     return `${API_BASE_URL.replace(/\/$/, '')}/${relativePath.replace(/^\//, '')}`;
   };
+
+  // Filter replies before rendering
+  const directReplies = replies.filter(reply => reply.answer_id === null);
 
   return (
     <>
@@ -310,65 +526,113 @@ function PostDetail() {
       </div>
       <div className="post-detail-replies">
         <h2>Add Your Reply</h2>
-        <div className="reply-form-container">
-          {/* We can use a form tag or just divs/buttons */} 
-          <textarea
-            className="reply-textarea"
-            placeholder="Share your thoughts..."
-            value={replyContent}
-            onChange={handleReplyChange}
-            maxLength={500} // Enforce max length
-            disabled={isSubmittingReply}
-          />
-          <div className="reply-form-footer">
-            <div className="reply-char-count">
-              {replyContent.length}/500
-            </div>
-            <div className="reply-options">
-              <label className="anonymity-label">
-                <input
-                  type="checkbox"
-                  checked={isAnonymous}
-                  onChange={handleAnonymityChange}
-                  disabled={isSubmittingReply}
-                />
-                Reply anonymously
-              </label>
-              <button 
-                className="submit-reply-button"
-                onClick={handleSubmitReply}
-                disabled={isSubmittingReply || replyContent.trim().length === 0}
-              >
-                {isSubmittingReply ? 'Submitting...' : 'Submit Reply'}
-              </button>
-            </div>
-          </div>
-           {replyError && <div className="error-message reply-error">{replyError}</div>}
-           {replySuccess && <div className="success-message reply-success">{replySuccess}</div>}
-        </div>
+        {/* Using the reusable component for the main form */}
+        <ReplyForm
+            onSubmit={handleSubmitMainReply}
+            isLoading={isSubmittingMainReply}
+            // We could add state for mainReplyContent back if needed,
+            // or let ReplyForm manage its own internal state completely.
+            // For now, assume ReplyForm manages its state.
+        />
+         {mainReplyError && <div className="error-message reply-error">{mainReplyError}</div>}
+         {mainReplySuccess && <div className="success-message reply-success">{mainReplySuccess}</div>}
       </div>
       <div className="post-detail-replies-list">
-        <h3>Replies ({replies.length})</h3>
+        <h3>Direct Replies ({directReplies.length})</h3>
         {repliesLoading && <div>Loading replies...</div>}
         {repliesError && <div className="error-message">Error loading replies: {repliesError}</div>}
         {!repliesLoading && !repliesError && (
-            replies.length === 0 
+            directReplies.length === 0 
             ? (<div>Be the first to reply!</div>)
-            : (replies.map(reply => (
-                <div key={reply._id} className="reply-item">
-                  <div className="reply-header">
-                     <span className="reply-author">
-                       {reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`}
-                     </span>
-                     <span className="reply-timestamp">
-                       {new Date(reply.create_time).toLocaleString()}
-                     </span>
-                  </div>
-                  <div className="reply-content">{reply.content}</div>
-                  {/* TODO: Add like/reply buttons for replies */}
-                </div>
-            )))
-        )}
+            : (directReplies.map(reply => { // Start of map for direct replies
+                const isSubRepliesVisible = visibleSubRepliesId === reply._id;
+                const currentSubReplyData = subRepliesData[reply._id];
+                const subReplyList = currentSubReplyData?.list || [];
+                const isLoadingSubReplies = currentSubReplyData?.loading;
+                const subReplyError = currentSubReplyData?.error;
+            
+                return (
+                    <div key={reply._id} className="reply-item">
+                    <div className="reply-header">
+                        <span className="reply-author">
+                        {reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`}
+                        </span>
+                        <span className="reply-timestamp">
+                        {new Date(reply.create_time).toLocaleString()}
+                        </span>
+                    </div>
+                    <div className="reply-content">{reply.content}</div>
+                    <div className="reply-actions">
+                        <button className="reply-action-button like-button" title="Like">
+                            Like ({reply.liked_times || 0})
+                        </button>
+                        <button 
+                            className="reply-action-button show-replies-button"
+                            title={isSubRepliesVisible ? "Hide Replies" : "Show Replies"}
+                            onClick={() => handleToggleSubReplies(reply._id)}
+                            disabled={isLoadingSubReplies} // Disable while loading sub-replies
+                        >
+                            {isLoadingSubReplies 
+                                ? "Loading..." 
+                                : isSubRepliesVisible 
+                                    ? "Hide Replies" 
+                                    : `Show (${reply.reply_times || 0}) Replies`}
+                        </button>
+                        <button
+                            className="reply-action-button reply-to-reply-button"
+                            title="Reply to this comment"
+                            onClick={() => handleToggleReplyForm(reply._id)}
+                        >
+                            Reply
+                        </button>
+                    </div>
+
+                    {/* Conditionally render the Sub-Reply Form */} 
+                    {replyingToId === reply._id && (
+                        <ReplyForm
+                            onSubmit={(content, isAnonymous) => handleSubmitSubReply(reply, content, isAnonymous)}
+                            onCancel={() => setReplyingToId(null)} 
+                            parentReplyAuthor={reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`}
+                            isLoading={isSubmittingMainReply} 
+                            submitButtonText="Submit Sub-Reply"
+                        />
+                    )}
+
+                    {/* Conditionally render the Sub-Replies List */} 
+                    {isSubRepliesVisible && (
+                        <div className="sub-replies-container">
+                            {isLoadingSubReplies && <div>Loading sub-replies...</div>}
+                            {subReplyError && <div className="error-message">Failed to load: {subReplyError}</div>}
+                            {!isLoadingSubReplies && !subReplyError && (
+                                subReplyList.length === 0
+                                ? (<div className="no-sub-replies">No sub-replies yet.</div>)
+                                : (subReplyList.map(subReply => (
+                                    <div key={subReply._id} className="sub-reply-item">
+                                        <div className="reply-header">
+                                            <span className="reply-author">
+                                                {subReply.anonymity ? 'Anonymous' : `User ${subReply.user_id}`}
+                                                {/* Optionally show who they replied to */}
+                                                {subReply.target_user_id && 
+                                                    <> replied to {subReply.target_reply_id === reply._id 
+                                                                    ? (reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`) 
+                                                                    : 'another user'} 
+                                                    </> /* More complex logic needed if showing deeper nesting targets */}
+                                            </span>
+                                            <span className="reply-timestamp">
+                                                {new Date(subReply.create_time).toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div className="reply-content">{subReply.content}</div>
+                                        {/* Add actions for sub-replies if needed */}
+                                    </div>
+                                )))
+                            )}
+                        </div>
+                    )}
+                    </div>
+                ); // End return for direct reply map
+            })) // End map over directReplies
+        )} 
       </div>
     </>
   );
