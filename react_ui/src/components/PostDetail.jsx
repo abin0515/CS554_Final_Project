@@ -66,7 +66,7 @@ const ReplyForm = ({
                   />
                   Reply anonymously
                 </label>
-                {onCancel && ( // Only show Cancel for sub-replies
+                {/* {onCancel && ( // Only show Cancel for sub-replies
                     <button
                         type="button"
                         className="cancel-reply-button"
@@ -75,7 +75,7 @@ const ReplyForm = ({
                     >
                        {cancelButtonText}
                     </button>
-                )}
+                )} */}
                 <button
                   type="button" // Use type="button" to prevent default form submission if wrapped in <form>
                   className="submit-reply-button"

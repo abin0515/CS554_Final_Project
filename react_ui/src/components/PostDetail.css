@@ -154,7 +154,8 @@
 }
 
 .reply-form-container {
-  background-color: #f9f9f9; /* Light background for the form area */
+  margin-top: 10px;
+  background-color: #f9f9f9;
   padding: 20px;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
@@ -311,7 +312,66 @@
   white-space: pre-wrap; /* Preserve line breaks */
 }
 
-/* Add styles for reply action buttons later */
+/* Reply Action Buttons */
+.reply-actions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0; /* Separator line */
+  display: flex;
+  gap: 15px; /* Increase gap slightly */
+  align-items: center;
+}
+
+.reply-action-button {
+  background-color: transparent;
+  border: none; /* Remove border for icon style */
+  border-radius: 4px;
+  padding: 4px; /* Adjust padding for icons */
+  font-size: 0.9em; /* Keep text size reasonable */
+  color: #6b7280; /* Muted text color */
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+  display: inline-flex; /* Align icon and text */
+  align-items: center;
+  gap: 4px; /* Space between icon and text */
+}
+
+.reply-action-button:hover {
+  color: #1f2937; /* Darken text on hover */
+  background-color: #f3f4f6; /* Optional: light background on hover */
+}
+
+.reply-action-button .icon {
+  font-size: 1.1em; /* Make icon slightly larger */
+  line-height: 1; /* Prevent extra space */
+}
+
+/* Keep sub-reply actions distinct if needed */
+.sub-reply-actions {
+    padding-top: 5px;
+    margin-top: 5px;
+    border-top: none; /* Remove top border for sub-reply actions */
+}
+
+.sub-reply-actions .reply-action-button {
+    /* Keep original sub-reply button style or customize */
+  
+    background-color: transparent;
+    padding: 4px 8px;
+    color: #4b5563;
+    font-size: 0.85em;
+}
+
+.sub-reply-actions .reply-action-button:hover {
+  background-color: #f3f4f6;
+  
+  color: #4b5563;
+}
+
+/* Add specific styles if needed later */
+.like-button { /* Style for like button */ }
+.show-replies-button { /* Style for show replies button */ }
+.reply-to-reply-button { /* Style for reply button */ }
 
 /* Sub-Reply List Styles */
 .sub-replies-container {
