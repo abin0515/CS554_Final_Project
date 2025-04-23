@@ -22,7 +22,7 @@ router.post('/create', async (req, res) => {
             target_reply_id, // Pass null if not provided
             reply_times,
             liked_times,
-            anonymity === false // Ensure boolean
+            anonymity // Ensure boolean
         );
 
         res.status(200).json({ 
@@ -44,6 +44,34 @@ router.post('/create', async (req, res) => {
     }
 });
 
-// Add other reply routes here (e.g., GET /byPost/:postId, DELETE /:replyId)
+// Get replies by Post ID
+router.get('/byPost/:postId', async (req, res) => {
+    try {
+        const postId = req.params.postId;
+        // Basic validation in route before hitting service
+        if (!postId || typeof postId !== 'string') {
+             return res.status(400).json({ success: false, error: 'Invalid or missing Post ID parameter.' });
+        }
+        
+        // Call the service layer to get replies
+        const replies = await repliesService.getRepliesByPostId(postId);
+        
+        res.status(200).json({ 
+            success: true, 
+            replies: replies // This will be an array (potentially empty)
+        });
+
+    } catch (e) {
+        console.error("Error in getRepliesByPost route:", e);
+        // Handle specific errors (like invalid ID format from service/data layers)
+        if (e.message.includes('Invalid') || e.message.includes('not found')) { // Catch validation errors
+            return res.status(400).json({ success: false, error: e.message }); 
+        } 
+        // General error
+        res.status(500).json({ success: false, error: e.message || 'Failed to fetch replies.' });
+    }
+});
+
+// Add other reply routes here (e.g., DELETE /:replyId)
 
 export default router; 

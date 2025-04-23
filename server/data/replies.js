@@ -63,4 +63,31 @@ export const incrementReplyCountInDB = async (replyId) => {
     return updateResult.acknowledged;
 };
 
-// Add other data functions as needed (e.g., getRepliesByPostIdFromDB, deleteReplyFromDB)
+/**
+ * Retrieves all replies for a given post ID, sorted by creation time (newest first).
+ * @param {string} postId - The ID of the post.
+ * @returns {Promise<Array<object>>} An array of reply objects.
+ */
+export const getRepliesByPostIdFromDB = async (postId) => {
+    // Basic validation for ObjectId format at data layer is good practice
+    if (!ObjectId.isValid(postId)) {
+        throw new Error(`Invalid Post ID format: ${postId}`);
+    }
+
+    const replies = await repliesCollection
+        .find({ post_id: postId })
+        .sort({ create_time: -1 }) // Sort by newest first
+        .toArray();
+
+    // Convert ObjectIds to strings for each reply
+    return replies.map(reply => {
+        reply._id = reply._id.toString();
+        if(reply.post_id) reply.post_id = reply.post_id.toString();
+        if(reply.user_id) reply.user_id = reply.user_id.toString();
+        if(reply.parent_reply_id) reply.parent_reply_id = reply.parent_reply_id.toString();
+        if(reply.target_user_id) reply.target_user_id = reply.target_user_id.toString();
+        return reply;
+    });
+};
+
+// Add other data functions as needed (e.g., deleteReplyFromDB)
