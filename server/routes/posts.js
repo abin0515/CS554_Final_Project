@@ -26,7 +26,7 @@ router.post(
       const actualUserId = user_id || '2001'; // Use provided or default
 
       // Step 1: Create the post document (without images initially)
-      const newPost = await postService.createPost(
+        const newPost = await postService.createPost(
           title, 
           content, 
           actualUserId, // Pass actual user ID
@@ -89,7 +89,7 @@ router.get('/page', async (req, res) => {
     }
 });
 
-// Get post by ID 
+// Get post by ID
 router.get('/detail', async (req, res) => {
     try {
         // Get post ID from query parameter
@@ -121,12 +121,12 @@ router.put(
   async (req, res) => {
     const postId = req.query.postId; 
     const userId = "2001"; // TODO: Replace with actual authentication
-
+        
     try {
       // Basic validation
       if (!userId) {
-          return res.status(401).json({ error: 'You must be logged in to edit a post' });
-      }
+            return res.status(401).json({ error: 'You must be logged in to edit a post' });
+        }
       if (!postId) {
           return res.status(400).json({ error: 'Post ID is required in query parameters.' });
       }
@@ -169,12 +169,12 @@ router.put(
 
       // Step 4: Call the service layer to update the post data in DB
       const updatedPost = await postService.editPost(postId, userId, updatePayload);
-      
-      res.status(200).json({
-          success: true,
-          message: 'Post updated successfully',
-          post: updatedPost
-      });
+        
+        res.status(200).json({
+            success: true,
+            message: 'Post updated successfully',
+            post: updatedPost
+        });
 
     } catch (e) {
         // Catch errors from delete/save images or post update
@@ -190,15 +190,15 @@ router.put(
     }
 });
 
-// removePost 
+// removePost
 router.delete('/removePost', async (req, res) => {
     const postId = req.query.postId; 
     // TODO: Get actual user_id from session/token
     const userId = "2001"; // Replace with actual authentication
         
     if (!userId) {
-        return res.status(401).json({ error: 'You must be logged in to delete a post' });
-    }
+            return res.status(401).json({ error: 'You must be logged in to delete a post' });
+        }
     if (!postId) {
         return res.status(400).json({ error: 'Post ID is required in query parameters.' });
     }

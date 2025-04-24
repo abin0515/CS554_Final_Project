@@ -121,6 +121,12 @@ function PostDetail() {
   const [visibleSubRepliesId, setVisibleSubRepliesId] = useState(null); // ID of the direct reply whose sub-replies are visible
   const [subRepliesData, setSubRepliesData] = useState({}); // Stores { [parentReplyId]: { loading, error, list } }
 
+  // ---- State for liked statuses ----
+  const [likedStatuses, setLikedStatuses] = useState({}); // { [replyId]: boolean }
+  const [likeCounts, setLikeCounts] = useState({}); // { [replyId]: number } - For optimistic updates
+  const [isLiking, setIsLiking] = useState({}); // { [replyId]: boolean } - Re-introducing loading state
+
+
   const handleBack = () => {
     navigate(-1);
   };
@@ -167,17 +173,14 @@ function PostDetail() {
       // Reset main form messages if user interacts with sub-reply
       setMainReplyError(null);
       setMainReplySuccess(null);
-      // Close sub-reply list if opening form for same reply
-      // setVisibleSubRepliesId(null); // Optional: Decide if opening reply form should hide sub-replies
   };
 
-  // --- Fetch Sub-Replies --- 
+  // --- Fetch Sub-Replies --- (Like count initialization added previously)
   const fetchSubReplies = async (answerId) => {
       if (!postId || !answerId) return;
-      // Set loading state specifically for this answerId
-      setSubRepliesData(prev => ({ 
-          ...prev, 
-          [answerId]: { loading: true, error: null, list: prev[answerId]?.list || [] } 
+      setSubRepliesData(prev => ({
+          ...prev,
+          [answerId]: { loading: true, error: null, list: prev[answerId]?.list || [] }
       }));
 
       try {
@@ -188,20 +191,27 @@ function PostDetail() {
           }
           const data = await response.json();
           if (data.success && Array.isArray(data.subReplies)) {
-              // Update state with fetched sub-replies
-              setSubRepliesData(prev => ({ 
-                  ...prev, 
-                  [answerId]: { loading: false, error: null, list: data.subReplies } 
+              // --- Initialize like counts for sub-replies ---
+              const initialCounts = {};
+              data.subReplies.forEach(reply => {
+                  initialCounts[reply._id] = reply.liked_times || 0;
+                  // TODO: Ideally, also fetch initial *liked status* for the current user here
+              });
+              setLikeCounts(prevCounts => ({ ...prevCounts, ...initialCounts }));
+              // -----------------------------------------------------
+
+              setSubRepliesData(prev => ({
+                  ...prev,
+                  [answerId]: { loading: false, error: null, list: data.subReplies }
               }));
           } else {
               throw new Error(data.error || 'Failed to fetch sub-replies or unexpected format.');
           }
       } catch (e) {
           console.error(`Error fetching sub-replies for ${answerId}:`, e);
-          // Update state with error
-          setSubRepliesData(prev => ({ 
-              ...prev, 
-              [answerId]: { loading: false, error: e.message, list: [] } 
+          setSubRepliesData(prev => ({
+              ...prev,
+              [answerId]: { loading: false, error: e.message, list: [] }
           }));
       }
   };
@@ -224,6 +234,78 @@ function PostDetail() {
       }
   };
   // --- End Toggle Sub-Replies Visibility ---
+
+  // --- Handle Like/Unlike Toggle (with API Call) ---
+  const handleLikeToggle = async (reply) => {
+      const replyId = reply._id;
+      const currentUserId = getCurrentUserId();
+
+      if (!currentUserId) {
+          console.error("User not identified. Cannot like/unlike.");
+          // Optionally show an error message to the user
+          return;
+      }
+      if (isLiking[replyId]) {
+        console.log("Already processing like/unlike for this reply.");
+        return; // Prevent double-clicks
+      }
+
+      // Set loading state for this specific button
+      setIsLiking(prev => ({ ...prev, [replyId]: true }));
+
+      const isCurrentlyLiked = !!likedStatuses[replyId];
+      const newLikedState = !isCurrentlyLiked;
+      const originalLikeCount = likeCounts[replyId] ?? (reply.liked_times || 0); // Store original count for rollback
+
+      // Optimistic UI updates
+      setLikedStatuses(prev => ({ ...prev, [replyId]: newLikedState }));
+      setLikeCounts(prev => ({
+        ...prev,
+        [replyId]: originalLikeCount + (newLikedState ? 1 : -1)
+      }));
+
+      const requestBody = {
+          bizId: replyId,
+          bizType: 'reply', // Hardcoded as per requirement
+          liked: newLikedState,
+          // userId: currentUserId // Include userId
+      };
+
+      try {
+          console.log('Sending like request:', requestBody);
+          // Capture the response
+          const response = await fetch(`http://localhost:3001/likes`, { // Use your likes endpoint URL
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                   // Add Authorization header if needed
+                  // 'Authorization': `Bearer ${your_auth_token}`
+              },
+              body: JSON.stringify(requestBody),
+          });
+
+          // Check if the request was successful (status code 2xx)
+          if (!response.ok) {
+              // Rollback optimistic updates on failure
+              console.error("Like request failed, rolling back UI.", response.status, response.statusText);
+              setLikedStatuses(prev => ({ ...prev, [replyId]: isCurrentlyLiked }));
+              setLikeCounts(prev => ({ ...prev, [replyId]: originalLikeCount })); // Revert count
+              // Throw an error to be caught by the catch block
+              throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+          }
+
+
+          console.log(`Like status updated successfully for reply ${replyId} to ${newLikedState}`);
+
+      } catch (e) {
+          console.error("Error toggling like:", e);
+          
+      } finally {
+           // Remove loading state for this specific button
+           setIsLiking(prev => ({ ...prev, [replyId]: false }));
+      }
+  };
+  // --- End Handle Like/Unlike Toggle ---
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -273,7 +355,7 @@ function PostDetail() {
     fetchPostDetail();
   }, [postId]);
 
-  // --- Fetch Replies ---
+  // --- Fetch Replies --- (Like count initialization added previously)
   const fetchReplies = async () => {
     if (!postId) return;
     setRepliesLoading(true);
@@ -286,7 +368,17 @@ function PostDetail() {
       }
       const data = await response.json();
       if (data.success && Array.isArray(data.replies)) {
-        console.log('Fetched replies data:', data.replies); // Log the received replies array
+        console.log('Fetched replies data:', data.replies);
+
+         // --- Initialize like counts for direct replies ---
+         const initialCounts = {};
+         data.replies.forEach(reply => {
+             initialCounts[reply._id] = reply.liked_times || 0;
+             // TODO: Fetch initial liked status for current user here
+         });
+         setLikeCounts(prevCounts => ({ ...prevCounts, ...initialCounts }));
+         // -----------------------------------------------------
+
         setReplies(data.replies);
       } else {
           throw new Error(data.error || 'Failed to fetch replies or unexpected format.');
@@ -301,9 +393,7 @@ function PostDetail() {
 
   // --- End Fetch Replies ---
 
-  // --- Submit Handlers ---
-
-  // Handles submitting the MAIN reply (direct to post)
+  // --- Submit Handlers --- (Like count initialization added previously)
   const handleSubmitMainReply = async (content, isAnonymous) => {
     setIsSubmittingMainReply(true);
     setMainReplyError(null);
@@ -333,7 +423,6 @@ function PostDetail() {
            method: 'POST',
            headers: {
                'Content-Type': 'application/json',
-               // Add Authorization header if needed
                // 'Authorization': `Bearer ${your_auth_token}`
            },
            body: JSON.stringify(replyData),
@@ -346,31 +435,28 @@ function PostDetail() {
        }
 
        setMainReplySuccess('Reply submitted successfully!');
-       // setMainReplyContent(''); // No longer needed
-       // setMainReplyIsAnonymous(false); // No longer needed
-       
+
        // Add the new reply to the top of the list
        if (result.reply) {
+           // --- Initialize like count for new reply ---
+           setLikeCounts(prev => ({...prev, [result.reply._id]: 0}));
+           // --------------------------------------------
            setReplies(prevReplies => [result.reply, ...prevReplies]);
        }
-       
+
        setPost(prevPost => ({ ...prevPost, reply_times: (prevPost.reply_times || 0) + 1 }));
-       // Clear success message after a delay
        setTimeout(() => setMainReplySuccess(null), 3000);
 
     } catch (e) {
         setMainReplyError(`Submit failed: ${e.message}`);
         console.error("Main reply submission error:", e);
-        // Clear error message after a delay
          setTimeout(() => setMainReplyError(null), 5000);
     } finally {
         setIsSubmittingMainReply(false);
     }
   };
 
-  // Handles submitting a SUB-REPLY (reply to another reply)
   const handleSubmitSubReply = async (parentReply, content, isAnonymous) => {
-    // Note: We might want separate loading state for sub-replies later
     setIsSubmittingMainReply(true); // Reuse main loading state for now
     setMainReplyError(null); // Clear main messages
     setMainReplySuccess(null);
@@ -383,13 +469,13 @@ function PostDetail() {
     }
 
     const replyData = {
-        post_id: postId, // Belongs to the same post
-        answer_id: parentReply.answer_id === null ? parentReply._id : parentReply.answer_id , // ID of the top-level answer reply
+        post_id: postId,
+        answer_id: parentReply.answer_id === null ? parentReply._id : parentReply.answer_id ,
         user_id: currentUserId,
         content: content,
         anonymity: isAnonymous,
-        target_reply_id: parentReply._id, // ID of the reply being replied to
-        target_user_id: parentReply.anonymity ? null : parentReply.user_id, // ID of the user being replied to
+        target_reply_id: parentReply._id,
+        target_user_id: parentReply.anonymity ? null : parentReply.user_id,
     };
 
      try {
@@ -397,7 +483,6 @@ function PostDetail() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // Add Authorization header if needed
                 // 'Authorization': `Bearer ${your_auth_token}`
             },
             body: JSON.stringify(replyData),
@@ -405,49 +490,70 @@ function PostDetail() {
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.error || 'Failed');
 
-        // Sub-reply submitted successfully!
-        setReplyingToId(null); // Close the form
-        setMainReplySuccess(`Reply to ${parentReply.anonymity ? 'Anonymous User' : `User ${parentReply.user_id}`} submitted!`); // Show success in main area
+        setReplyingToId(null);
+        setMainReplySuccess(`Reply to ${parentReply.anonymity ? 'Anonymous User' : `User ${parentReply.user_id}`} submitted!`);
 
-        // IMPORTANT: We are NOT adding the sub-reply to the top-level 'replies' state here.
-        // We need to update the parent reply's reply_times count instead.
-        setReplies(prevReplies => prevReplies.map(r => 
-            r._id === parentReply._id 
-             ? { ...r, reply_times: (r.reply_times || 0) + 1 } 
+        // Update parent reply's reply_times count in the main replies list
+        setReplies(prevReplies => prevReplies.map(r =>
+            r._id === parentReply._id
+             ? { ...r, reply_times: (r.reply_times || 0) + 1 }
              : r
         ));
 
-        // Always update the stored sub-reply data if it exists, regardless of visibility
+        // Update parent reply's reply_times count if it exists within a sub-reply list
+        if (parentReply.answer_id !== null) {
+            setSubRepliesData(prevData => {
+                const parentParentId = parentReply.answer_id;
+                if (prevData[parentParentId]?.list) {
+                    const updatedList = prevData[parentParentId].list.map(r =>
+                        r._id === parentReply._id
+                        ? { ...r, reply_times: (r.reply_times || 0) + 1 }
+                        : r
+                    );
+                    return {
+                        ...prevData,
+                        [parentParentId]: { ...prevData[parentParentId], list: updatedList }
+                    };
+                }
+                return prevData;
+            });
+        }
+
+        // Add the new sub-reply to the correct sub-reply list
         if (result.reply) {
+            // --- Initialize like count for new sub-reply ---
+             setLikeCounts(prev => ({...prev, [result.reply._id]: 0}));
+             // --------------------------------------------------
+
             setSubRepliesData(prev => {
-                const parentId = parentReply._id;
-                if (prev[parentId]) { // Only update if we have data loaded for this parent
+                const topLevelParentId = parentReply.answer_id === null ? parentReply._id : parentReply.answer_id;
+
+                if (prev[topLevelParentId]) {
                     return {
                         ...prev,
-                        [parentId]: {
-                            ...prev[parentId],
-                            // Add the new reply, maintaining sort order (oldest first)
-                            list: [...(prev[parentId].list || []), result.reply] 
+                        [topLevelParentId]: {
+                            ...prev[topLevelParentId],
+                            list: [...(prev[topLevelParentId].list || []), result.reply]
                         }
                     };
                 }
-                return prev; // Otherwise, don't change the state
+                return prev;
             });
         }
 
         setTimeout(() => setMainReplySuccess(null), 3000);
 
-        // Force a full page reload after successful sub-reply submission
-        window.location.reload();
+        // No reload needed with optimistic updates
 
      } catch (e) {
         setMainReplyError(`Sub-reply failed: ${e.message}`);
         console.error("Sub-reply submission error:", e);
         setTimeout(() => setMainReplyError(null), 5000);
      } finally {
-         setIsSubmittingMainReply(false); // Reuse main loading state
+         setIsSubmittingMainReply(false);
      }
   };
+
 
   // --- End Submit Handlers ---
 
@@ -532,13 +638,9 @@ function PostDetail() {
       </div>
       <div className="post-detail-replies">
         <h2>Add Your Reply</h2>
-        {/* Using the reusable component for the main form */}
         <ReplyForm
             onSubmit={handleSubmitMainReply}
             isLoading={isSubmittingMainReply}
-            // We could add state for mainReplyContent back if needed,
-            // or let ReplyForm manage its own internal state completely.
-            // For now, assume ReplyForm manages its state.
         />
          {mainReplyError && <div className="error-message reply-error">{mainReplyError}</div>}
          {mainReplySuccess && <div className="success-message reply-success">{mainReplySuccess}</div>}
@@ -556,7 +658,14 @@ function PostDetail() {
                 const subReplyList = currentSubReplyData?.list || [];
                 const isLoadingSubReplies = currentSubReplyData?.loading;
                 const subReplyError = currentSubReplyData?.error;
-            
+
+                // ---- Get current like status and count ----
+                const isLiked = !!likedStatuses[reply._id];
+                const currentLikeCount = likeCounts[reply._id] ?? (reply.liked_times || 0);
+                const likeButtonText = isLiked ? 'Liked' : 'Like';
+                const isLoadingLike = isLiking[reply._id]; // Use the loading state
+                // ------------------------------------------
+
                 return (
                     <div key={reply._id} className="reply-item">
                     <div className="reply-header">
@@ -569,19 +678,26 @@ function PostDetail() {
                     </div>
                     <div className="reply-content">{reply.content}</div>
                     <div className="reply-actions">
-                        <button className="reply-action-button like-button" title="Like">
-                            Like ({reply.liked_times || 0})
+                        {/* ---- Like Button ---- */}
+                        <button
+                            className={`reply-action-button like-button ${isLiked ? 'liked' : ''}`}
+                            title={isLiked ? 'Unlike' : 'Like'}
+                            onClick={() => handleLikeToggle(reply)}
+                            disabled={isLoadingLike} // Disable while loading
+                        >
+                            {isLoadingLike ? '...' : likeButtonText} ({currentLikeCount})
                         </button>
-                        <button 
+                        {/* ----------------------------- */}
+                        <button
                             className="reply-action-button show-replies-button"
                             title={isSubRepliesVisible ? "Hide Replies" : "Show Replies"}
                             onClick={() => handleToggleSubReplies(reply._id)}
                             disabled={isLoadingSubReplies} // Disable while loading sub-replies
                         >
-                            {isLoadingSubReplies 
-                                ? "Loading..." 
-                                : isSubRepliesVisible 
-                                    ? "Hide Replies" 
+                            {isLoadingSubReplies
+                                ? "Loading..."
+                                : isSubRepliesVisible
+                                    ? "Hide Replies"
                                     : `Show (${reply.reply_times || 0}) Replies`}
                         </button>
                         <button
@@ -612,49 +728,62 @@ function PostDetail() {
                             {!isLoadingSubReplies && !subReplyError && (
                                 subReplyList.length === 0
                                 ? (<div className="no-sub-replies">No sub-replies yet.</div>)
-                                : (subReplyList.map(subReply => (
-                                    <div key={subReply._id} className="sub-reply-item">
-                                        <div className="reply-header">
-                                            <span className="reply-author">
-                                                {subReply.anonymity ? 'Anonymous' : `User ${subReply.user_id}`}
-                                                {/* Show who they replied to, based on target_user_id */}
-                                                {subReply.target_reply_id && // Check if it's replying to a specific reply ID
-                                                    <> replied to {subReply.target_user_id 
-                                                                    ? `User ${subReply.target_user_id}` // Display target user ID if available
-                                                                    : 'Anonymous User'}             {/* Otherwise assume target was anonymous */}
-                                                    </>
-                                                }
-                                            </span>
-                                            <span className="reply-timestamp">
-                                                {new Date(subReply.create_time).toLocaleString()}
-                                            </span>
+                                : (subReplyList.map(subReply => { // Map over sub-replies
+                                     // ---- Get current like status and count for SUB-REPLY ----
+                                    const isSubLiked = !!likedStatuses[subReply._id];
+                                    const currentSubLikeCount = likeCounts[subReply._id] ?? (subReply.liked_times || 0);
+                                    const subLikeButtonText = isSubLiked ? 'Liked' : 'Like';
+                                    const isSubLoadingLike = isLiking[subReply._id]; // Use the loading state
+                                    // ----------------------------------------------------------
+                                    return (
+                                        <div key={subReply._id} className="sub-reply-item">
+                                            <div className="reply-header">
+                                                <span className="reply-author">
+                                                    {subReply.anonymity ? 'Anonymous' : `User ${subReply.user_id}`}
+                                                    {subReply.target_reply_id &&
+                                                        <> replied to {subReply.target_user_id
+                                                                        ? `User ${subReply.target_user_id}`
+                                                                        : 'Anonymous User'}
+                                                        </>
+                                                    }
+                                                </span>
+                                                <span className="reply-timestamp">
+                                                    {new Date(subReply.create_time).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <div className="reply-content">{subReply.content}</div>
+                                            <div className="reply-actions sub-reply-actions">
+                                                {/* ---- Sub-Reply Like Button ---- */}
+                                                <button
+                                                    className={`reply-action-button like-button ${isSubLiked ? 'liked' : ''}`}
+                                                    title={isSubLiked ? 'Unlike' : 'Like'}
+                                                    onClick={() => handleLikeToggle(subReply)}
+                                                    disabled={isSubLoadingLike} // Disable while loading
+                                                >
+                                                     {isSubLoadingLike ? '...' : subLikeButtonText} ({currentSubLikeCount})
+                                                </button>
+                                                {/* --------------------------------------- */}
+                                                <button
+                                                    className="reply-action-button reply-to-reply-button"
+                                                    title="Reply to this comment"
+                                                    onClick={() => handleToggleReplyForm(subReply._id)}
+                                                >
+                                                    Reply
+                                                </button>
+                                            </div>
+                                            {/* Conditionally render the Reply Form for this sub-reply */} 
+                                            {replyingToId === subReply._id && (
+                                                <ReplyForm
+                                                    onSubmit={(content, isAnonymous) => handleSubmitSubReply(subReply, content, isAnonymous)} // Pass subReply as parentReply
+                                                    onCancel={() => setReplyingToId(null)} 
+                                                    parentReplyAuthor={subReply.anonymity ? 'Anonymous User' : `User ${subReply.user_id}`} 
+                                                    isLoading={isSubmittingMainReply} 
+                                                    submitButtonText="Submit Reply" // Keep button text simple
+                                                />
+                                            )}
                                         </div>
-                                        <div className="reply-content">{subReply.content}</div>
-                                        {/* Add actions for sub-replies */}
-                                        <div className="reply-actions sub-reply-actions">
-                                            <button className="reply-action-button like-button" title="Like">
-                                                Like ({subReply.liked_times || 0})
-                                            </button>
-                                            <button
-                                                className="reply-action-button reply-to-reply-button"
-                                                title="Reply to this comment"
-                                                onClick={() => handleToggleReplyForm(subReply._id)} // Toggle form for this sub-reply
-                                            >
-                                                Reply
-                                            </button>
-                                        </div>
-                                        {/* Conditionally render the Reply Form for this sub-reply */} 
-                                        {replyingToId === subReply._id && (
-                                            <ReplyForm
-                                                onSubmit={(content, isAnonymous) => handleSubmitSubReply(subReply, content, isAnonymous)} // Pass subReply as parentReply
-                                                onCancel={() => setReplyingToId(null)} 
-                                                parentReplyAuthor={subReply.anonymity ? 'Anonymous User' : `User ${subReply.user_id}`} 
-                                                isLoading={isSubmittingMainReply} 
-                                                submitButtonText="Submit Reply" // Keep button text simple
-                                            />
-                                        )}
-                                    </div>
-                                )))
+                                    ); // End return for sub-reply map
+                                }))
                             )}
                         </div>
                     )}

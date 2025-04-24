@@ -55,7 +55,7 @@ function PostList() {
               <h3 className="post-title">{post.title}</h3>
             </Link>
             <p className="post-content">
-              {post.content} 
+              {post.content}
             </p>
             <div className="post-meta">
               <span>Likes: {post.total_like_times}</span>
