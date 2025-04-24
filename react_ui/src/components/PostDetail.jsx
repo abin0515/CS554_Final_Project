@@ -14,13 +14,13 @@ const getCurrentUserId = () => {
 // You could move this to a separate file later
 const ReplyForm = ({
     onSubmit,
-    onCancel,
+    
     parentReplyAuthor, // Display 'Replying to X'
     isLoading,
     initialContent = '',
     initialAnonymous = false,
     submitButtonText = 'Submit Reply',
-    cancelButtonText = 'Cancel'
+    
 }) => {
     const [content, setContent] = useState(initialContent);
     const [isAnonymous, setIsAnonymous] = useState(initialAnonymous);
@@ -103,8 +103,7 @@ function PostDetail() {
   const dropdownRef = useRef(null);
 
   // State for the MAIN reply form (replying directly to post)
-  // const [mainReplyContent, setMainReplyContent] = useState(''); // No longer needed, ReplyForm handles its state
-  // const [mainReplyIsAnonymous, setMainReplyIsAnonymous] = useState(false); // No longer needed
+ 
   const [isSubmittingMainReply, setIsSubmittingMainReply] = useState(false);
   const [mainReplyError, setMainReplyError] = useState(null);
   const [mainReplySuccess, setMainReplySuccess] = useState(null);
@@ -116,7 +115,7 @@ function PostDetail() {
 
   // State for SUB-REPLY form (replying to a specific reply)
   const [replyingToId, setReplyingToId] = useState(null); // ID of the reply being replied to
-  // No need for separate sub-reply content/anonymity state if using the ReplyForm component
+
 
   // State for showing/hiding and storing sub-replies
   const [visibleSubRepliesId, setVisibleSubRepliesId] = useState(null); // ID of the direct reply whose sub-replies are visible
