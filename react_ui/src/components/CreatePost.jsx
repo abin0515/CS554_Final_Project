@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../config';
+import { POST_API_BASE_URL } from '../config';
 import './CreatePost.css'; // We'll create this CSS file next
 
 const MAX_IMAGES = 6;
@@ -98,7 +98,7 @@ function CreatePost() {
 
     try {
       // Send combined data to the createPost endpoint
-      const response = await fetch(`${API_BASE_URL}/posts/createPost`, {
+      const response = await fetch(`${POST_API_BASE_URL}/posts/createPost`, {
         method: 'POST',
         body: formData,
         // No 'Content-Type' header for FormData - browser sets it

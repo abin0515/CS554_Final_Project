@@ -11,7 +11,7 @@ router.post('/', async (req, res) => {
         message: 'Successfully liked/unliked post',
     });
 });
-router.get('/list', async (req, res) => {
+router.post('/list', async (req, res) => {
 
    
     const bizType = req.body.bizType;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Import Link
-import { API_BASE_URL } from '../config'; // Import the base URL
+import { POST_API_BASE_URL } from '../config'; // Import the base URL
 import './PostList.css'; // Import the CSS file
 
 function PostList() {
@@ -14,7 +14,7 @@ function PostList() {
       setError(null);
       try {
         // Use the imported base URL and correct endpoint path without /api
-        const response = await fetch(`${API_BASE_URL}/posts/page?page=1`); 
+        const response = await fetch(`${POST_API_BASE_URL}/posts/page?page=1`); 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

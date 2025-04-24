@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { API_BASE_URL } from '../config';
+import { POST_API_BASE_URL } from '../config';
 import './CreatePost.css'; // Reuse CreatePost styles for now
 
 const MAX_IMAGES = 6;
@@ -26,7 +26,7 @@ function EditPost() {
   // Helper to create full URL for display
   const getImageFullUrl = (relativePath) => {
     if (!relativePath) return '';
-    return relativePath.startsWith('http') ? relativePath : `${API_BASE_URL.replace(/\/$/, '')}/${relativePath.replace(/^\//, '')}`;
+    return relativePath.startsWith('http') ? relativePath : `${POST_API_BASE_URL.replace(/\/$/, '')}/${relativePath.replace(/^\//, '')}`;
   };
 
   // --- Fetch existing post data --- 
@@ -39,7 +39,7 @@ function EditPost() {
     setIsFetching(true);
     const fetchPostData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/posts/detail?postId=${postId}`);
+        const response = await fetch(`${POST_API_BASE_URL}/posts/detail?postId=${postId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -157,7 +157,7 @@ function EditPost() {
 
     try {
       // Send combined data to the editPost endpoint
-      const response = await fetch(`${API_BASE_URL}/posts/editPost?postId=${postId}`, {
+      const response = await fetch(`${POST_API_BASE_URL}/posts/editPost?postId=${postId}`, {
         method: 'PUT',
         body: formData,
         // No 'Content-Type' header needed for FormData

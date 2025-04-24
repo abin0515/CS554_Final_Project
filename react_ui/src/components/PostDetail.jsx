@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../config';
+import { POST_API_BASE_URL, LIKE_API_BASE_URL } from '../config';
 import './PostDetail.css'; // Import CSS file
 
 // Placeholder for getting the current user ID - replace with your actual auth logic
@@ -146,7 +146,7 @@ function PostDetail() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API_BASE_URL}/posts/removePost?postId=${postId}`, {
+        const response = await fetch(`${POST_API_BASE_URL}/posts/removePost?postId=${postId}`, {
           method: 'DELETE',
         });
         
@@ -184,7 +184,7 @@ function PostDetail() {
       }));
 
       try {
-          const response = await fetch(`${API_BASE_URL}/replies/subReplies/${postId}/${answerId}`);
+          const response = await fetch(`${POST_API_BASE_URL}/replies/subReplies/${postId}/${answerId}`);
           if (!response.ok) {
               const errorData = await response.json();
               throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
@@ -274,7 +274,7 @@ function PostDetail() {
       try {
           console.log('Sending like request:', requestBody);
           // Capture the response
-          const response = await fetch(`http://localhost:3001/likes`, { // Use your likes endpoint URL
+          const response = await fetch(`${LIKE_API_BASE_URL}/likes`, { // Use your likes endpoint URL
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -338,7 +338,7 @@ function PostDetail() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API_BASE_URL}/posts/detail?postId=${postId}`);
+        const response = await fetch(`${POST_API_BASE_URL}/posts/detail?postId=${postId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -355,42 +355,94 @@ function PostDetail() {
     fetchPostDetail();
   }, [postId]);
 
-  // --- Fetch Replies --- (Like count initialization added previously)
+  // --- Fetch Replies --- (Will also fetch initial like statuses)
   const fetchReplies = async () => {
     if (!postId) return;
     setRepliesLoading(true);
     setRepliesError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/replies/byPost/${postId}`);
-      if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      // 1. Fetch the list of replies for the post
+      const repliesResponse = await fetch(`${POST_API_BASE_URL}/replies/byPost/${postId}`);
+      if (!repliesResponse.ok) {
+          const errorData = await repliesResponse.json();
+          throw new Error(errorData.error || `HTTP error fetching replies! status: ${repliesResponse.status}`);
       }
-      const data = await response.json();
-      if (data.success && Array.isArray(data.replies)) {
-        console.log('Fetched replies data:', data.replies);
-
-         // --- Initialize like counts for direct replies ---
-         const initialCounts = {};
-         data.replies.forEach(reply => {
-             initialCounts[reply._id] = reply.liked_times || 0;
-             // TODO: Fetch initial liked status for current user here
-         });
-         setLikeCounts(prevCounts => ({ ...prevCounts, ...initialCounts }));
-         // -----------------------------------------------------
-
-        setReplies(data.replies);
-      } else {
-          throw new Error(data.error || 'Failed to fetch replies or unexpected format.');
+      const repliesData = await repliesResponse.json();
+      if (!repliesData.success || !Array.isArray(repliesData.replies)) {
+           throw new Error(repliesData.error || 'Failed to fetch replies or unexpected format.');
       }
+      
+      const fetchedReplies = repliesData.replies;
+     
+      // Set replies state early so they render even if status fetch fails
+      setReplies(fetchedReplies); 
+
+      // --- 2. Fetch Liked Statuses for these Replies (using GET /list) ---
+      let likedIdsSet = new Set(); // Use a Set for efficient lookup
+      if (fetchedReplies.length > 0) {
+        const replyIds = fetchedReplies.map(reply => reply._id);
+        
+        // Note: Sending body with GET is non-standard, but required by current backend route
+        try {
+          
+          const statusResponse = await fetch(`http://localhost:3001/likes/list`, { // Target the GET /list route
+            method: 'POST', // Use GET method
+            headers: { 'Content-Type': 'application/json' }, 
+            // Attempt to send data in body (non-standard for GET)
+            body: JSON.stringify({ 
+              bizType: 'reply', 
+              bizIds: replyIds
+              // userId is hardcoded in the backend service for now
+            })
+          });
+
+          if (!statusResponse.ok) {
+            console.error('Failed to fetch liked statuses:', statusResponse.status, statusResponse.statusText);
+            // Handle error: replies will render, but initial like state might be wrong
+          } else {
+            const statusData = await statusResponse.json();
+            // Backend route returns { success: true, result: [...] }
+            if (statusData.success && Array.isArray(statusData.result)) { 
+             
+              // Store the liked IDs in a Set for quick checking later
+              likedIdsSet = new Set(statusData.result);
+            } else {
+               console.error('Liked status response format incorrect:', statusData);
+            }
+          }
+        } catch (statusError) {
+           console.error("Error fetching like statuses:", statusError);
+           // Handle error fetching statuses
+        }
+      }
+      // --- End Fetch Liked Statuses ---
+
+      // --- 3. Initialize Component States ---
+      const initialCounts = {};
+      const initialLikedStatuses = {};
+      fetchedReplies.forEach(reply => {
+          // Initialize counts from reply data
+          initialCounts[reply._id] = reply.liked_times || 0;
+          // Initialize liked status based on the fetched likedIdsSet
+          if (likedIdsSet.has(reply._id)) {
+            initialLikedStatuses[reply._id] = true;
+          }
+          // No need for else { initialLikedStatuses[reply._id] = false; } because default is falsy
+      });
+      
+      // Update states
+      setLikeCounts(prevCounts => ({ ...prevCounts, ...initialCounts })); 
+      setLikedStatuses(initialLikedStatuses); // Set the initial liked statuses
+      console.log('Initialized likedStatuses:', initialLikedStatuses);
+      // --------------------------------------
+
     } catch (e) {
       setRepliesError(e.message);
-      console.error("Error fetching replies:", e);
+      console.error("Error in fetchReplies process:", e);
     } finally {
       setRepliesLoading(false);
     }
   };
-
   // --- End Fetch Replies ---
 
   // --- Submit Handlers --- (Like count initialization added previously)
@@ -419,7 +471,7 @@ function PostDetail() {
 
     try {
        console.log('Sending anonymously:', replyData.anonymity);
-       const response = await fetch(`${API_BASE_URL}/replies/create`, {
+       const response = await fetch(`${POST_API_BASE_URL}/replies/create`, {
            method: 'POST',
            headers: {
                'Content-Type': 'application/json',
@@ -479,7 +531,7 @@ function PostDetail() {
     };
 
      try {
-        const response = await fetch(`${API_BASE_URL}/replies/create`, {
+        const response = await fetch(`${POST_API_BASE_URL}/replies/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -579,7 +631,7 @@ function PostDetail() {
     if (relativePath.startsWith('http')) {
       return relativePath;
     } 
-    return `${API_BASE_URL.replace(/\/$/, '')}/${relativePath.replace(/^\//, '')}`;
+    return `${POST_API_BASE_URL.replace(/\/$/, '')}/${relativePath.replace(/^\//, '')}`;
   };
 
   // Filter replies before rendering
