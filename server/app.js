@@ -3,6 +3,7 @@ import session from 'express-session'
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { startConsumer, closeConsumerConnection } from './listener/mqConsumer.js';
 
 import configRoutes from './routes/index.js'
 
@@ -37,7 +38,34 @@ app.use(
 
 
 configRoutes(app);
-app.listen(3000, () => {
+
+// Start the server and the consumer
+const PORT = 3000; // Define port
+const server = app.listen(PORT, () => { // Store server instance
     console.log("We've now got a server!");
-    console.log('Your routes will be running on http://localhost:3000');
+    console.log(`Your routes will be running on http://localhost:${PORT}`);
+    // Start the RabbitMQ consumer after the server is ready
+    startConsumer().catch(error => {
+        console.error("Failed to start RabbitMQ consumer initially:", error);
+    });
 });
+
+// Graceful shutdown
+const gracefulShutdown = async () => {
+  console.log('\nReceived kill signal, shutting down gracefully...');
+  server.close(async () => { // Stop accepting new HTTP connections
+    console.log('Closed out remaining HTTP connections.');
+    await closeConsumerConnection(); // Close RabbitMQ connection
+    // Add any other cleanup here
+    process.exit(0);
+  });
+
+  // Force shutdown if server hasn't finished in time
+  setTimeout(() => {
+    console.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000); // 10 seconds timeout
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown); // Handle Ctrl+C

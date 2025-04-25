@@ -63,6 +63,7 @@ export const incrementReplyCountInDB = async (replyId) => {
     return updateResult.acknowledged;
 };
 
+
 /**
  * Retrieves all replies for a given post ID, sorted by creation time (newest first).
  * @param {string} postId - The ID of the post.
@@ -125,5 +126,22 @@ export const getSubRepliesByAnswerIdFromDB = async (postId, answerId) => {
         return reply;
     });
 };
+export const incrementReplyLikeTimes = async (bizId) => {
+    
+    const updateResult = await repliesCollection.updateOne(
+        { _id: new ObjectId(bizId) },
+        { $inc: { liked_times: 1 }, $set: { update_time: new Date() } }
+    );
+    return updateResult.acknowledged;
+}
 
+export const decrementReplyLikeTimes = async (bizId) => {
+    const updatedReply = await repliesCollection.findOneAndUpdate(
+        { _id: new ObjectId(bizId), liked_times: { $gt: 0 } }, 
+        { $inc: { liked_times: -1 }, $set: { update_time: new Date() } },
+        { returnDocument: 'after' } 
+    );
+    
+    return !!updatedReply; 
+}
 // Add other data functions as needed (e.g., deleteReplyFromDB)

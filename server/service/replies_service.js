@@ -5,13 +5,17 @@ import { ObjectId } from 'mongodb';
 import {
     createReplyInDB,
     getReplyByIdFromDB,
-    incrementReplyCountInDB,
+   
     getRepliesByPostIdFromDB,
-    getSubRepliesByAnswerIdFromDB
+    getSubRepliesByAnswerIdFromDB,
+    incrementReplyLikeTimes,
+    decrementReplyLikeTimes,
 } from '../data/replies.js';
 import {
     getPostByIdFromDB,
-    incrementPostReplyCountInDB
+    incrementPostReplyCountInDB,
+    incrementPostTotalLikeNumInDB,
+    decrementPostTotalLikeNumInDB
 } from '../data/posts.js';
 
 /**
@@ -114,24 +118,7 @@ export async function getRepliesByPostId(postId) {
     return replies; // Return the array (could be empty)
 }
 
-/**
- * Increments the reply_times count for a specific reply.
- * @param {string} replyId - The ID of the reply to update.
- * @returns {Promise<boolean>} True if the update was acknowledged and matched a document.
- * @throws Will throw an error if the replyId is invalid or the update fails.
- */
-export async function incrementReplyTimes(replyId) {
-    // replyId = validation.checkId(replyId, 'Reply ID for incrementing times'); // Service level validation
-    
-    const success = await incrementReplyCountInDB(replyId);
-    
-    if (!success) {
-        // incrementReplyCountInDB returns false if matchedCount was 0
-        // We throw an error here because the caller expects the reply to exist.
-        throw new Error(`Failed to increment reply times: Reply with ID ${replyId} not found or update failed.`);
-    }
-    return true; // Indicate success
-}
+
 
 /**
  * Gets sub-replies associated with a specific top-level answer ID within a post.
@@ -140,13 +127,7 @@ export async function incrementReplyTimes(replyId) {
  * @returns {Promise<Array<object>>} An array of sub-reply objects.
  */
 export async function getSubRepliesByAnswerId(postId, answerId) {
-    // Service level validation
-    // postId = validation.checkId(postId, 'Post ID for fetching sub-replies');
-    // answerId = validation.checkId(answerId, 'Answer ID for fetching sub-replies');
     
-    // Optional: Check if post and answer exist before fetching sub-replies
-    // await getPostByIdFromDB(postId); 
-    // await getReplyByIdFromDB(answerId);
 
     const subReplies = await getSubRepliesByAnswerIdFromDB(postId, answerId);
     return subReplies; // Return the array (could be empty)
@@ -155,10 +136,35 @@ export async function getSubRepliesByAnswerId(postId, answerId) {
 // Add other reply-related service functions here (e.g., deleteReply, etc.) 
 // These should also call corresponding data layer functions
 
+export async function handleLikesTask(bizId, userId, liked) { // liked is likely string "true" or "false"
+    const reply = await getReplyByIdFromDB(bizId);
+    if (!reply) {
+        console.error(`(handleLikesTask) Reply not found for bizId: ${bizId}`);
+        return; // Cannot proceed without reply to get post_id
+    }
+
+    // Explicitly check the *string* value received from the message queue
+    if (liked === 'false') { 
+        // Decrement logic
+        
+        await decrementReplyLikeTimes(bizId); 
+        await decrementPostTotalLikeNumInDB(reply.post_id);
+    } else { 
+        // Increment logic (Handles liked === 'true' or potentially unexpected values)
+        
+        await incrementReplyLikeTimes(bizId);
+        await incrementPostTotalLikeNumInDB(reply.post_id);
+    }
+}
+
+
+
 export default {
     createReply,
     getReplyById,
     getRepliesByPostId,
-    incrementReplyTimes,
-    getSubRepliesByAnswerId
+    
+    
+    getSubRepliesByAnswerId,
+    handleLikesTask
 }; 

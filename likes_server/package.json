@@ -9,6 +9,7 @@
   },
   "license": "SIT",
   "dependencies": {
+    "amqplib": "^0.10.7",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",

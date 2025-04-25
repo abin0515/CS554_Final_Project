@@ -166,3 +166,21 @@ export async function incrementPostReplyCountInDB(postId) {
     }
     return updateResult.acknowledged;
 }
+
+export const incrementPostTotalLikeNumInDB = async (postId) => {
+ 
+    const updateResult = await postsCollection.updateOne(
+        { _id: new ObjectId(postId) },
+        { $inc: { total_like_times: 1 }, $set: { update_time: new Date() } }
+    );
+    return updateResult.acknowledged;
+}   
+
+export const decrementPostTotalLikeNumInDB = async (postId) => {
+    const updateResult = await postsCollection.findOneAndUpdate (
+        { _id: new ObjectId(postId), total_like_times: { $gt: 0 } },
+        { $inc: { total_like_times: -1 }, $set: { update_time: new Date() } },
+        { returnDocument: 'after' }
+    );
+    return !!updateResult;
+}
