@@ -39,7 +39,7 @@ export async function startConsumer() {
                     console.log(`(Consumer: ${QUEUE_NAME}) Received message with key '${msg.fields.routingKey}':`, message);
 
                     // ** TODO: Add specific logic for point server here later **
-                    handleLikesTask(message.bizId, message.userId, message.liked);
+                    handleLikesTask(message.bizId, message.userId, message.liked);  
                     // Acknowledge the message
                     channel.ack(msg);
                 } catch (error) {

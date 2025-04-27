@@ -144,4 +144,11 @@ export const decrementReplyLikeTimes = async (bizId) => {
     
     return !!updatedReply; 
 }
+export const incrementReplyTimesInDB = async (answerId) => {
+    const updateResult = await repliesCollection.updateOne(
+        { _id: new ObjectId(answerId) },
+        { $inc: { reply_times: 1 }, $set: { update_time: new Date() } }
+    );
+    return updateResult.acknowledged;
+}
 // Add other data functions as needed (e.g., deleteReplyFromDB)

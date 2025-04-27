@@ -1,7 +1,14 @@
 import path from 'path';
 import fs from 'fs/promises'; // Use promises version of fs
+import { fileURLToPath } from 'url'; // Import necessary function
 
-const UPLOAD_DIR = 'public/uploads/posts';
+// Derive the directory of the current module (server/service)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Construct an absolute path to the intended upload directory (server/public/uploads/posts)
+const SERVER_ROOT = path.resolve(__dirname, '../'); // Go up one level from service to server
+const UPLOAD_DIR = path.join(SERVER_ROOT, 'public/uploads/posts');
 
 /**
  * Saves uploaded image files for a specific post.
@@ -17,7 +24,8 @@ export async function savePostImages(files, postId, startIndex = 0) {
     }
 
     const savedUrls = [];
-    // Ensure the upload directory exists (might be redundant if checked elsewhere)
+    // Ensure the upload directory exists
+    // fs.mkdir with recursive: true won't throw if it already exists
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
     for (let i = 0; i < files.length; i++) {
@@ -31,7 +39,9 @@ export async function savePostImages(files, postId, startIndex = 0) {
             // Multer with memoryStorage gives us a buffer
             await fs.writeFile(destinationPath, file.buffer);
             
-            // Construct the relative URL path for saving in DB
+            // Construct the relative URL path for saving in DB (relative to server root for serving)
+            // IMPORTANT: This URL assumes your static file server is configured to serve from 'server/public'
+            // If it serves from project root, this needs adjustment.
             const relativeUrl = path.join('/uploads/posts', uniqueFilename).replace(/\\/g, '/');
             savedUrls.push(relativeUrl);
             console.log(`Saved image: ${destinationPath} as ${relativeUrl}`);

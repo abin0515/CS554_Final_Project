@@ -10,6 +10,7 @@ import {
     getSubRepliesByAnswerIdFromDB,
     incrementReplyLikeTimes,
     decrementReplyLikeTimes,
+    incrementReplyTimesInDB
 } from '../data/replies.js';
 import {
     getPostByIdFromDB,
@@ -157,13 +158,21 @@ export async function handleLikesTask(bizId, userId, liked) { // liked is likely
     }
 }
 
-
+export async function incrementReplyTimes(answerId) {
+    try {
+        if(answerId !== null) {
+            await incrementReplyTimesInDB(answerId);
+        }
+    } catch (error) {
+        console.error(`(incrementReplyTimes) Error incrementing reply times for answerId: ${answerId}`, error);
+    }
+}
 
 export default {
     createReply,
     getReplyById,
     getRepliesByPostId,
-    
+    incrementReplyTimes,
     
     getSubRepliesByAnswerId,
     handleLikesTask
