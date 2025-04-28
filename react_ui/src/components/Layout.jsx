@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'; // Import Outlet, useLocation, and useNavigate
 import './Layout.css'; // Import the dedicated Layout CSS file
+import HeaderBar from './HeaderBar';
 
 function Layout() {
   // Get the current location object
@@ -11,12 +12,11 @@ function Layout() {
     navigate('/posts/create'); // Navigate to the create post route
   };
 
+
   return (
     <div className="app-container">
       {/* Header Area */}
-      <div className="app-header">
-        Header Area
-      </div>
+      <HeaderBar/>
 
       <div className="app-body">
         {/* Sidebar */}
