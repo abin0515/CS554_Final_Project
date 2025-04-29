@@ -9,7 +9,7 @@ Both MongoDB and Redis have been deployed in an AWS VM for our project:
 - **Redis**: Deployed using Redis Stack Server and accessible at `18.188.222.62:6379`
 
 ### Messaging Service
-- **RabbitMQ**: Deployed using RabbitMQ and accessible at `18.188.222.62:15672` 
+- **RabbitMQ**: Deployed using RabbitMQ and accessible on broswer at `18.188.222.62:15672` 
 
 username: `myuser`, password: `mypassword`
 

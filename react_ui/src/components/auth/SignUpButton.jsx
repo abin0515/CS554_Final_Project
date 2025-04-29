@@ -1,4 +1,4 @@
-import { authEmail } from "../../lib/Auth"
+
 import { useState } from "react"
 import SignUpPanel from "./SignUpPanel"
 

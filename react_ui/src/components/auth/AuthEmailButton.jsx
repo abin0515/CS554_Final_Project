@@ -1,4 +1,3 @@
-import { authEmail } from "../../lib/Auth"
 import { useState } from "react"
 import AuthEmailPanel from "./AuthEmailPanel"
 

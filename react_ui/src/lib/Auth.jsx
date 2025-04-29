@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { auth as firebaseAuth } from './firebase';
-import { onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, getAuth, signInWithPopup, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
 
 export function useAuth() {
     const [user, setUser] = useState(null);
