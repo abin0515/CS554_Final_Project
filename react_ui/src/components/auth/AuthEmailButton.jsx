@@ -5,7 +5,8 @@ function EmailSignIn() {
     const [hidden, setHidden] = useState(true)
 
     return <>
-        <button onClick={()=>{setHidden(!hidden)}}>Sign In With Email</button>
+        <button onClick={() => setHidden(false)}>Sign In With Email</button>
+
 
         {hidden ? <></>: <AuthEmailPanel setHidden={setHidden}/>}
     </>

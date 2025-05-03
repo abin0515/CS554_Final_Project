@@ -1,47 +1,53 @@
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import { authEmail } from "../../lib/Auth";
+import "./AuthEmailPanel.css";
 
-import { useState } from "react"
-import { authEmail } from "../../lib/Auth"
+function AuthEmailPanel(props) {
+  const [error, setError] = useState(false);
 
-import "./AuthEmailPanel.css"
+  const modal = (
+    <div className="signin-overlay">
+      <div className="signin-panel-container">
+        <button className="signin-close-button" onClick={() => props.setHidden(true)}>
+          ×
+        </button>
+        <form className="signin-form" id="signInForm">
+          <h2 className="signin-panel-title">Sign In With Email</h2>
 
-function AuthEmailPanel(props){
-    const [error, setError] = useState(false)
+          <label htmlFor="email">Email</label>
+          <input name="email" type="email" placeholder="Enter your email" required />
 
-    return <div className="overlay">
-        <button onClick={()=>{props.setHidden(true)}}>Close</button>
-        <form className="container" id="signInForm">
-            <h2>Sign In With Email</h2>
-            
+          <label htmlFor="password">Password</label>
+          <input name="password" type="password" placeholder="Enter your password" required />
 
-            <label htmlFor="email">Email</label>
-            <input name="email" type="email"></input>
+          <button
+            className="signin-submit-button"
+            onClick={async (e) => {
+              e.preventDefault();
+              const form = document.getElementById("signInForm");
+              const fd = new FormData(form);
 
-            <label htmlFor="password">Password</label>
-            <input name="password" type="password"></input>
+              const email = fd.get("email");
+              const password = fd.get("password");
 
-            <button onClick={async (e)=>{
-                e.preventDefault()
-                const form = document.getElementById("signInForm")
-                const fd = new FormData(form)
+              try {
+                await authEmail(email, password);
+              } catch (e) {
+                setError(e);
+              }
+            }}
+          >
+            Sign In
+          </button>
 
-
-                const email = fd.get("email")
-                const password = fd.get("password")
-
-                try {
-                    await authEmail(email, password)
-                } catch (e) {
-                    setError(e)
-                }
-
-            }}>Sign In</button>
-
-            {error ? <p className="error">{error.message}</p> : <></>}
+          {error && <p className="signin-error">{error.message}</p>}
         </form>
-
-
+      </div>
     </div>
+  );
+
+  return createPortal(modal, document.body); 
 }
 
-export default AuthEmailPanel
-
+export default AuthEmailPanel;

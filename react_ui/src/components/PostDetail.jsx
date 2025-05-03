@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { POST_API_BASE_URL, LIKE_API_BASE_URL } from '../config';
 import './PostDetail.css'; // Import CSS file
+import { ArrowBack, MoreVert, Edit, Delete, ThumbUpAlt } from '@mui/icons-material';
 
 // Placeholder for getting the current user ID - replace with your actual auth logic
 const getCurrentUserId = () => {
@@ -641,25 +642,24 @@ function PostDetail() {
     <>
       <div className="post-detail-container"> 
         <div className="post-detail-top-actions">
-          <button onClick={handleBack} className="back-button" title="Go Back">
-            &lt;
-          </button>
+        <button onClick={handleBack} className="back-button" title="Go Back">
+          <ArrowBack />
+        </button>
+
           <div className="more-options-container">
-            <button 
-              onClick={toggleDropdown} 
-              className="more-options-button" 
-              title="More Options"
-            >
-              &#8943;
-            </button>
+          <button onClick={toggleDropdown} className="more-options-button" title="More Options">
+            <MoreVert />
+          </button>
+
             {isDropdownOpen && (
               <div className="options-dropdown" ref={dropdownRef}>
                 <button onClick={handleEdit} className="dropdown-button edit-button">
-                  Edit
+                  <Edit /> Edit
                 </button>
                 <button onClick={handleDelete} className="dropdown-button delete-button">
-                  Delete
+                  <Delete /> Delete
                 </button>
+
               </div>
             )}
           </div>
@@ -732,12 +732,12 @@ function PostDetail() {
                     <div className="reply-actions">
                         {/* ---- Like Button ---- */}
                         <button
-                            className={`reply-action-button like-button ${isLiked ? 'liked' : ''}`}
-                            title={isLiked ? 'Unlike' : 'Like'}
-                            onClick={() => handleLikeToggle(reply)}
-                            disabled={isLoadingLike} // Disable while loading
+                          className={`reply-action-button like-button ${isLiked ? 'liked' : ''}`}
+                          onClick={() => handleLikeToggle(reply)}
+                          disabled={isLoadingLike}
                         >
-                            {isLoadingLike ? '...' : likeButtonText} ({currentLikeCount})
+                        <ThumbUpAlt className="like-icon" />
+                        {isLoadingLike ? '...' : likeButtonText} ({currentLikeCount})
                         </button>
                         {/* ----------------------------- */}
                         <button

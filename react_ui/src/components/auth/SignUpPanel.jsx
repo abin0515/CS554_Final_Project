@@ -1,47 +1,47 @@
+import { useState } from "react";
+import { signUpNewAccount } from "../../lib/Auth";
+import "./SignUpPanel.css";
 
-import { useState } from "react"
-import { signUpNewAccount } from "../../lib/Auth"
+function SignUpPanel(props) {
+  const [error, setError] = useState(false);
 
-import "./SignUpPanel.css"
+  return (
+    <div className="overlay">
+      <div className="panel-container">
+        <button className="close-button" onClick={() => props.setHidden(true)}>×</button>
+        <form className="email-panel-form" id="signUpForm">
+          <h2 className="panel-title">Create Account</h2>
 
-function SignUpPanel(props){
-    const [error, setError] = useState(false)
+          <label htmlFor="email">Email</label>
+          <input name="email" type="email" placeholder="Enter your email" />
 
-    return <div className="overlay">
-        <button onClick={()=>{props.setHidden(true)}}>Close</button>
-        <form className="container" id="signUpForm">
-            <h2>Create A New Account</h2>
-            
+          <label htmlFor="password">Password</label>
+          <input name="password" type="password" placeholder="Enter your password" />
 
-            <label htmlFor="email">Email</label>
-            <input name="email" type="email"></input>
+          <button
+            className="submit-button"
+            onClick={async (e) => {
+              e.preventDefault();
+              const form = document.getElementById("signUpForm");
+              const fd = new FormData(form);
+              const email = fd.get("email");
+              const password = fd.get("password");
 
-            <label htmlFor="password">Password</label>
-            <input name="password" type="password"></input>
+              try {
+                await signUpNewAccount(email, password);
+              } catch (e) {
+                setError(e);
+              }
+            }}
+          >
+            Register
+          </button>
 
-            <button onClick={async (e)=>{
-                e.preventDefault()
-                const form = document.getElementById("signUpForm")
-                const fd = new FormData(form)
-
-
-                const email = fd.get("email")
-                const password = fd.get("password")
-
-                try {
-                    await signUpNewAccount(email, password)
-                } catch (e) {
-                    setError(e)
-                }
-
-            }}>Register</button>
-
-            {error ? <p className="error">{error.message}</p> : <></>}
+          {error && <p className="error">{error.message}</p>}
         </form>
-
-
+      </div>
     </div>
+  );
 }
 
-export default SignUpPanel
-
+export default SignUpPanel;

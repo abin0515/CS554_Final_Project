@@ -1,56 +1,40 @@
 import React from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'; // Import Outlet, useLocation, and useNavigate
-import './Layout.css'; // Import the dedicated Layout CSS file
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import './Layout.css';
 import HeaderBar from './HeaderBar';
 
 function Layout() {
-  // Get the current location object
   const location = useLocation();
-  const navigate = useNavigate(); // Get the navigate function
+  const navigate = useNavigate();
 
   const handleCreateClick = () => {
-    navigate('/posts/create'); // Navigate to the create post route
+    navigate('/posts/create');
   };
 
-
   return (
-    <div className="app-container">
-      {/* Header Area */}
-      <HeaderBar/>
-
-      <div className="app-body">
-        {/* Sidebar */}
-        <div className="app-sidebar">
-          Sidebar Area
-        </div>
-
-        {/* Main Content */}
-        <div className="app-main">
-          {/* Show button only on the main PostList page ('/') */}
-          {location.pathname === '/' && (
-            <div className="app-tabs">
-              {/* Add onClick handler */}
-              <button 
-                className="create-post-button"
-                onClick={handleCreateClick} 
-              >
-                create post
-              </button>
+    <>
+      <div id="app-background" />
+      <div className="app-container">
+        <HeaderBar />
+        <div className="app-body">
+          <div className="app-sidebar">Sidebar Area</div>
+          <div className="app-main">
+            {location.pathname === '/' && (
+              <div className="app-tabs">
+                <button className="create-post-button" onClick={handleCreateClick}>
+                  Create Post
+                </button>
+              </div>
+            )}
+            <div className="app-content">
+              <Outlet />
             </div>
-          )}
-          <div className="app-content">
-            {/* Child route content will be rendered here */}
-            <Outlet />
           </div>
-        </div>
-
-        {/* Right Panel */}
-        <div className="app-right">
-          Right Side Area (e.g., Trending or Recommended)
+          <div className="app-right">Right Side Area (e.g., Trending or Recommended)</div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
-export default Layout; 
+export default Layout;

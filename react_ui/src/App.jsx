@@ -11,6 +11,7 @@ import PostList from './components/PostList';
 import PostDetail from './components/PostDetail';
 import CreatePost from './components/CreatePost';
 import EditPost from './components/EditPost';
+import UserProfile from './components/UserProfile';
 
 function App() {
   return (
@@ -31,6 +32,9 @@ function App() {
           
           {/* Add route for editing posts */}
           <Route path="posts/edit" element={<EditPost />} />
+
+          {/* Add route for profile page */}
+          <Route path="profile" element={<UserProfile />} />
           
           {/* Add other routes that should use the Layout here */}
           {/* Example: <Route path="profile" element={<UserProfile />} /> */}

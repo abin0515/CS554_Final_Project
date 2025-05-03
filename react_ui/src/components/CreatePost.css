@@ -1,10 +1,8 @@
-/* Styles for CreatePost component */
-
 .create-post-container {
   padding: 1rem;
-  background-color: #fff; /* White background for the form area */
-  border: 1px solid #e5e7eb; /* Light border */
-  border-radius: 0.375rem;
+  background-color: #e0f7ff;
+  border: 1px solid #bae6fd;
+  border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
 }
@@ -15,34 +13,38 @@
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #f0f0f0; /* Separator line */
+  border-bottom: 1px solid #d1d5db;
 }
 
 .create-post-title-input {
-  flex-grow: 1; /* Allow input to take available space */
+  flex-grow: 1;
   border: none;
-  font-size: 1.5rem; /* Larger font for title */
+  font-size: 1.5rem;
   padding: 0.5rem;
-  outline: none; /* Remove default focus outline */
+  outline: none;
   margin-right: 1rem;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
 }
 
 .create-post-actions-top {
   display: flex;
-  gap: 0.5rem; /* Space between buttons */
+  gap: 0.5rem;
 }
 
-.cancel-button, .post-button, .topic-button {
-  padding: 0.4rem 0.8rem;
+.cancel-button,
+.post-button,
+.topic-button {
+  padding: 0.5rem 1rem;
   border: 1px solid transparent;
   border-radius: 0.375rem;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   transition: background-color 0.2s, border-color 0.2s;
 }
 
 .cancel-button {
-  background-color: #f3f4f6; /* Light gray */
+  background-color: #f3f4f6;
   color: #374151;
   border-color: #d1d5db;
 }
@@ -52,47 +54,42 @@
 }
 
 .post-button {
-  background-color: #10b981; /* Emerald green */
+  background-color: #f59e0b;
   color: white;
 }
 
 .post-button:hover {
-  background-color: #059669;
+  background-color: #d97706;
 }
 
 .topic-button {
-  background-color: #f0f8ff; /* Alice blue like */
-  color: #60a5fa; /* Light blue text */
-  border-color: #dbeafe;
+  background-color: #dbeafe;
+  color: #2563eb;
   font-weight: 500;
 }
 
 .topic-button:hover {
-  background-color: #e0f2fe;
+  background-color: #bfdbfe;
 }
 
 .create-post-topic {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-/* Remove toolbar style if no longer needed */
-/* .create-post-toolbar { ... } */
-
-/* Styles for Image Upload */
 .image-upload-section {
-  margin-bottom: 1rem; /* Space below image uploader */
-  padding: 0.5rem;
-  border: 1px dashed #d1d5db; /* Dashed border */
-  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px dashed #93c5fd;
+  border-radius: 0.375rem;
   text-align: center;
-  background-color: #f9fafb;
+  background-color: #f0f9ff;
 }
 
 .image-upload-label {
   cursor: pointer;
-  color: #3b82f6; /* Blue text */
+  color: #3b82f6;
   font-weight: 500;
-  display: inline-block; /* Allow padding/margin */
+  display: inline-block;
   padding: 0.5rem 1rem;
 }
 
@@ -100,7 +97,6 @@
   text-decoration: underline;
 }
 
-/* Hide the actual file input visually */
 .image-upload-input {
   width: 0.1px;
   height: 0.1px;
@@ -110,26 +106,24 @@
   z-index: -1;
 }
 
-/* New style for the grid container */
 .image-previews-grid {
-  display: flex; 
-  flex-wrap: wrap; /* Allow items to wrap to the next line */
-  gap: 0.75rem; /* Space between preview items */
-  margin-top: 1rem; /* Space above the grid */
-  justify-content: center; /* Center previews if they don't fill the row */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  justify-content: center;
 }
 
 .image-preview-container {
-  /* Remove margin-top as grid gap handles spacing */
-  position: relative; 
-  display: inline-block; 
+  position: relative;
+  display: inline-block;
 }
 
 .image-preview {
-  max-width: 100%; /* Prevent image exceeding container width */
-  max-height: 200px; /* Limit preview height */
-  border-radius: 0.25rem;
-  border: 1px solid #e5e7eb;
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e1;
 }
 
 .remove-image-button {
@@ -139,11 +133,11 @@
   background-color: rgba(0, 0, 0, 0.6);
   color: white;
   border: none;
-  border-radius: 50%; /* Make it round */
+  border-radius: 50%;
   width: 24px;
   height: 24px;
   font-size: 14px;
-  line-height: 22px; /* Adjust for vertical centering */
+  line-height: 22px;
   text-align: center;
   cursor: pointer;
   padding: 0;
@@ -154,34 +148,34 @@
 }
 
 .create-post-content-input {
-  width: 100%; /* Use 100% to account for padding/border */
-  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
+  border-radius: 0.375rem;
   font-size: 1rem;
   line-height: 1.5;
-  resize: vertical; /* Allow vertical resize */
+  resize: vertical;
   margin-bottom: 1rem;
+  background-color: #ffffff;
 }
 
 .create-post-footer {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #f0f0f0;
-  font-size: 0.8rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.85rem;
   color: #6b7280;
 }
 
-/* Ensure error message has margin */
 .create-post-error {
   margin-top: 1rem;
+  color: #b91c1c;
+  font-weight: 500;
 }
 
-/* Disabled button styles */
 .cancel-button:disabled,
 .post-button:disabled,
 .topic-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-} 
+}
