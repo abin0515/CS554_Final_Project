@@ -2,19 +2,21 @@ import { Router } from "express";
 import multer from 'multer';
 import * as postService from "../service/post_service.js";
 import * as uploadService from "../service/upload_service.js";
+import { authenticate } from "../middleware/authenticate.js";
 
 const router = Router();
 const MAX_IMAGES = 6;
 
 // Configure Multer to use memory storage (to get buffer and postId before saving)
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 1024 * 1024 * 5 } // 5MB limit per file
 });
 
 // createPost - Now handles text data AND image files
 router.post(
-  '/createPost', 
+  '/createPost',
+  authenticate,
   upload.array('postImages', MAX_IMAGES), // Use multer middleware here
   async (req, res) => {
     try {
@@ -27,8 +29,8 @@ router.post(
 
       // Step 1: Create the post document (without images initially)
         const newPost = await postService.createPost(
-          title, 
-          content, 
+          title,
+          content,
           actualUserId, // Pass actual user ID
           type // Assuming type is sent from frontend
       );
@@ -40,7 +42,7 @@ router.post(
       if (files && files.length > 0) {
         try {
           finalImageUrls = await uploadService.savePostImages(files, newPost._id);
-          
+
           // Step 3: Update the post document with the image URLs
           postWithImages = await postService.addImagesToPost(newPost._id, actualUserId, finalImageUrls);
 
@@ -49,13 +51,13 @@ router.post(
           // Options: Delete the already created post? Or just return error?
           console.error('Error processing images after post creation:', imageError);
           // For simplicity, return an error but leave the text post created
-          return res.status(500).json({ 
+          return res.status(500).json({
             error: `Post text created (ID: ${newPost._id}), but failed to save images: ${imageError.message}`,
             postId: newPost._id
-          }); 
+          });
         }
       }
-        
+
       // Step 4: Return the final post object (with image URLs if successful)
       res.status(200).json(postWithImages);
 
@@ -75,7 +77,7 @@ router.get('/page', async (req, res) => {
         // console.log(page);
         // Call the service layer
         const posts = await postService.getPostsByPage(page);
-        
+
         // Return the posts along with pagination info
         res.status(200).json({
             success: true,
@@ -93,11 +95,11 @@ router.get('/page', async (req, res) => {
 router.get('/detail', async (req, res) => {
     try {
         // Get post ID from query parameter
-        const postId = req.query.postId; 
-        
+        const postId = req.query.postId;
+
         // Call the service layer
         const post = await postService.getPostById(postId);
-        
+
         res.status(200).json(post);
     } catch (e) {
         // Check for specific error types
@@ -108,7 +110,7 @@ router.get('/detail', async (req, res) => {
         } else if (e.message === 'Post ID is required') {
             return res.status(400).json({ error: e.message });
         }
-        
+
         // General error
         res.status(500).json({ error: e.message });
     }
@@ -117,11 +119,12 @@ router.get('/detail', async (req, res) => {
 // editPost - Now handles text and files together
 router.put(
   '/editPost',
+  authenticate,
   upload.array('postImages', MAX_IMAGES), // Use multer middleware for new images
   async (req, res) => {
-    const postId = req.query.postId; 
+    const postId = req.query.postId;
     const userId = "2001"; // TODO: Replace with actual authentication
-        
+
     try {
       // Basic validation
       if (!userId) {
@@ -134,7 +137,7 @@ router.put(
       // Extract text data and the list of existing URLs to keep
       const { title, content, existingUrls } = req.body;
       const newFiles = req.files; // Newly uploaded files from multer
-      
+
       let parsedExistingUrls = [];
       try {
         // Ensure existingUrls is parsed correctly, default to empty array if missing/invalid
@@ -145,12 +148,12 @@ router.put(
         return res.status(400).json({ error: 'Invalid format for existingUrls.' });
       }
 
-      // --- Image Handling --- 
+      // --- Image Handling ---
       // Step 1: Save the *new* files uploaded in this request.
       // Pass the count of existing URLs as the starting index for naming new files.
       const newlySavedUrls = await uploadService.savePostImages(
-          newFiles, 
-          postId, 
+          newFiles,
+          postId,
           parsedExistingUrls.length // Start index for new file names
       );
 
@@ -160,7 +163,7 @@ router.put(
       // Step 3: Synchronize physical files with the final URL list (delete obsolete ones)
       await uploadService.syncPostImages(postId, finalImageUrls);
 
-      // --- Update Post Document --- 
+      // --- Update Post Document ---
       const updatePayload = {
         title: title,
         content: content,
@@ -169,7 +172,7 @@ router.put(
 
       // Step 4: Call the service layer to update the post data in DB
       const updatedPost = await postService.editPost(postId, userId, updatePayload);
-        
+
         res.status(200).json({
             success: true,
             message: 'Post updated successfully',
@@ -191,11 +194,11 @@ router.put(
 });
 
 // removePost
-router.delete('/removePost', async (req, res) => {
-    const postId = req.query.postId; 
+router.delete('/removePost', authenticate, async (req, res) => {
+    const postId = req.query.postId;
     // TODO: Get actual user_id from session/token
     const userId = "2001"; // Replace with actual authentication
-        
+
     if (!userId) {
             return res.status(401).json({ error: 'You must be logged in to delete a post' });
         }
@@ -207,7 +210,7 @@ router.delete('/removePost', async (req, res) => {
         // Step 1: Call the service layer to delete the post from DB
         // This also handles permission checks internally now
         const deleteDbResult = await postService.removePost(userId, postId);
-        
+
         // If DB deletion was successful (removePost doesn't throw error)
         if (deleteDbResult) { // Assuming removePost returns true on success
           // Step 2: Delete associated images from the filesystem
@@ -220,13 +223,13 @@ router.delete('/removePost', async (req, res) => {
              // The DB entry is already gone.
              console.error(`Error deleting images for post ${postId} after DB removal:`, imageDeleteError);
              // Optionally return a specific message indicating partial success
-             return res.status(200).json({ 
-                success: true, 
+             return res.status(200).json({
+                success: true,
                 message: 'Post deleted from database, but encountered error cleaning up images.'
              });
           }
         }
-        
+
         res.status(200).json({ success: true, message: 'Post and associated images deleted successfully' });
 
     } catch (e) {

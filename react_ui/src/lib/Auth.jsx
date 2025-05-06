@@ -5,14 +5,14 @@ import { onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, sig
 export function useAuth() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-  
+
     useEffect(() => {
         return onAuthStateChanged(firebaseAuth, u => {
             setUser(u);
             setLoading(false);
         });
     }, []);
-  
+
     return { user, loading };
 }
 
@@ -35,3 +35,21 @@ export function signUpNewAccount(email, password){
 }
 
 
+export async function fetchWithAuth(url, options = {}) {
+    const user = firebaseAuth.currentUser;
+    if (!user) {
+        throw new Error("User is not signed in");
+    }
+    // Retrieve the ID token
+    const token = await user.getIdToken();
+
+    // Append the authorization header
+    const authOptions = {
+        ...options,
+        headers: {
+            ...options.headers,
+            Authorization: `Bearer ${token}`
+        }
+    };
+    return fetch(url, authOptions);
+}
