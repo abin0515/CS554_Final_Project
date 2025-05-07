@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { POST_API_BASE_URL } from '../config';
+import { fetchWithAuth } from '../lib/Auth';
 import './CreatePost.css';
 
 const MAX_IMAGES = 6;
@@ -60,7 +61,7 @@ function CreatePost() {
 
     if (!title.trim()) return setError('Title cannot be empty.');
     if (!content.trim()) return setError('Content cannot be empty.');
-    
+
     setLoading(true);
     const formData = new FormData();
     formData.append('title', title);
@@ -70,7 +71,7 @@ function CreatePost() {
     imageFiles.forEach(file => formData.append('postImages', file));
 
     try {
-      const response = await fetch(`${POST_API_BASE_URL}/posts/createPost`, {
+      const response = await fetchWithAuth(`${POST_API_BASE_URL}/posts/createPost`, {
         method: 'POST',
         body: formData
       });

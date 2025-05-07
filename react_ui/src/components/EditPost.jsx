@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { POST_API_BASE_URL } from '../config';
+import { fetchWithAuth } from '../lib/Auth';
 import './CreatePost.css'; // Reuse CreatePost styles for now
 
 const MAX_IMAGES = 6;
@@ -29,7 +30,7 @@ function EditPost() {
     return relativePath.startsWith('http') ? relativePath : `${POST_API_BASE_URL.replace(/\/$/, '')}/${relativePath.replace(/^\//, '')}`;
   };
 
-  // --- Fetch existing post data --- 
+  // --- Fetch existing post data ---
   useEffect(() => {
     if (!postId) {
       setFetchError('No Post ID provided for editing.');
@@ -39,7 +40,7 @@ function EditPost() {
     setIsFetching(true);
     const fetchPostData = async () => {
       try {
-        const response = await fetch(`${POST_API_BASE_URL}/posts/detail?postId=${postId}`);
+        const response = await fetchWithAuth(`${POST_API_BASE_URL}/posts/detail?postId=${postId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -47,9 +48,9 @@ function EditPost() {
         setTitle(data.title || '');
         setContent(data.content || '');
         const urls = data.image_urls || [];
-        setExistingImageUrls(urls); 
+        setExistingImageUrls(urls);
         // Initial previews are from existing URLs
-        setImagePreviewUrls(urls.map(url => getImageFullUrl(url))); 
+        setImagePreviewUrls(urls.map(url => getImageFullUrl(url)));
       } catch (e) {
         setFetchError(`Failed to fetch post data: ${e.message}`);
         console.error("Error fetching post data:", e);
@@ -60,36 +61,36 @@ function EditPost() {
     fetchPostData();
   }, [postId]);
 
-  // --- Image Handling --- 
+  // --- Image Handling ---
   const handleImageChange = (event) => {
      // Similar to CreatePost, but check against total images (existing + new)
      const files = event.target.files;
      if (!files) return;
- 
+
      setSubmitError(null);
      const currentTotalImages = existingImageUrls.length + imageFiles.length;
      const filesToAdd = Array.from(files);
- 
+
      if (currentTotalImages + filesToAdd.length > MAX_IMAGES) {
        setSubmitError(`You can only have a maximum of ${MAX_IMAGES} images in total.`);
        event.target.value = '';
        return;
      }
- 
+
      const newFiles = [];
      const newPreviewUrls = [];
- 
+
      filesToAdd.forEach(file => {
        newFiles.push(file);
        newPreviewUrls.push(URL.createObjectURL(file)); // Create blob URLs for new files
      });
- 
+
      setImageFiles(prevFiles => [...prevFiles, ...newFiles]);
      // Add new blob URLs to the existing full URLs for combined preview
-     setImagePreviewUrls(prevUrls => [...prevUrls, ...newPreviewUrls]); 
+     setImagePreviewUrls(prevUrls => [...prevUrls, ...newPreviewUrls]);
      event.target.value = '';
   };
- 
+
   const handleRemoveImage = useCallback((indexToRemove, isExisting) => {
     const urlToRemove = imagePreviewUrls[indexToRemove];
     URL.revokeObjectURL(urlToRemove); // Revoke potential blob URL
@@ -105,9 +106,9 @@ function EditPost() {
     }
     // Always remove from the combined preview list
     setImagePreviewUrls(prev => prev.filter((_, index) => index !== indexToRemove));
- 
+
   }, [imagePreviewUrls, existingImageUrls.length]);
- 
+
   // Clean up new blob URLs on unmount
   useEffect(() => {
     return () => {
@@ -120,9 +121,9 @@ function EditPost() {
     };
   }, [imagePreviewUrls]);
 
-  // --- Form Submission --- 
+  // --- Form Submission ---
   const handleCancel = () => {
-    navigate(-1); 
+    navigate(-1);
   };
 
   const handleSubmit = async (event) => {
@@ -145,7 +146,7 @@ function EditPost() {
     // Append text data
     formData.append('title', title);
     formData.append('content', content);
-    
+
     // Append the list of EXISTING urls that should be kept
     formData.append('existingUrls', JSON.stringify(existingImageUrls));
 
@@ -157,7 +158,7 @@ function EditPost() {
 
     try {
       // Send combined data to the editPost endpoint
-      const response = await fetch(`${POST_API_BASE_URL}/posts/editPost?postId=${postId}`, {
+      const response = await fetchWithAuth(`${POST_API_BASE_URL}/posts/editPost?postId=${postId}`, {
         method: 'PUT',
         body: formData,
         // No 'Content-Type' header needed for FormData
@@ -171,7 +172,7 @@ function EditPost() {
 
       console.log('Post updated successfully:', result);
       // Navigate back to the detail page on success
-      navigate(`/posts/detail?postId=${postId}`); 
+      navigate(`/posts/detail?postId=${postId}`);
 
     } catch (e) {
       setSubmitError(e.message);
@@ -181,7 +182,7 @@ function EditPost() {
     }
   };
 
-  // --- Render --- 
+  // --- Render ---
   if (isFetching) return <div>Loading post data...</div>;
   if (fetchError) return <div className="error-message">{fetchError}</div>;
 
@@ -189,8 +190,8 @@ function EditPost() {
     <form className="edit-post-container" onSubmit={handleSubmit}>
       {/* Header (reuse styles or use edit-post-* classes) */}
       <div className="create-post-header">
-         <input 
-            type="text" 
+         <input
+            type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title"
@@ -217,24 +218,24 @@ function EditPost() {
              Add Image ({imagePreviewUrls.length}/{MAX_IMAGES})
           </label>
         )}
-        <input 
+        <input
           id="image-upload"
           type="file"
           accept="image/*"
-          multiple 
+          multiple
           onChange={handleImageChange}
           className="image-upload-input"
           disabled={loading || imagePreviewUrls.length >= MAX_IMAGES}
         />
-        <div className="image-previews-grid"> 
+        <div className="image-previews-grid">
           {imagePreviewUrls.map((url, index) => {
             const isExisting = index < existingImageUrls.length;
             return (
               <div key={url || index} className="image-preview-container">
                 <img src={url} alt={`Preview ${index + 1}`} className="image-preview" />
-                <button 
-                  type="button" 
-                  onClick={() => handleRemoveImage(index, isExisting)} 
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index, isExisting)}
                   className="remove-image-button"
                   disabled={loading}
                   title="Remove Image"
@@ -248,7 +249,7 @@ function EditPost() {
       </div>
 
       {/* Content Textarea (reuse) */}
-      <textarea 
+      <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="What are your thoughts?"
@@ -267,4 +268,4 @@ function EditPost() {
   );
 }
 
-export default EditPost; 
+export default EditPost;
