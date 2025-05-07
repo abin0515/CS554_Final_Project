@@ -66,7 +66,6 @@ function CreatePost() {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('content', content);
-    formData.append('user_id', '2001');
     formData.append('type', '1');
     imageFiles.forEach(file => formData.append('postImages', file));
 

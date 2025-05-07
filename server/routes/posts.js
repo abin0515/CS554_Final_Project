@@ -21,17 +21,15 @@ router.post(
   async (req, res) => {
     try {
       // Extract text data from req.body
-      const { title, content, user_id, type } = req.body;
+      const { title, content, type } = req.body;
       const files = req.files; // Image files are in req.files
-
-      // TODO: Get actual user_id from session/authentication
-      const actualUserId = user_id || '2001'; // Use provided or default
+      const userId = req.user.uid;
 
       // Step 1: Create the post document (without images initially)
         const newPost = await postService.createPost(
           title,
           content,
-          actualUserId, // Pass actual user ID
+          userId, // Pass actual user ID
           type // Assuming type is sent from frontend
       );
 
@@ -44,7 +42,7 @@ router.post(
           finalImageUrls = await uploadService.savePostImages(files, newPost._id);
 
           // Step 3: Update the post document with the image URLs
-          postWithImages = await postService.addImagesToPost(newPost._id, actualUserId, finalImageUrls);
+          postWithImages = await postService.addImagesToPost(newPost._id, userId, finalImageUrls);
 
         } catch (imageError) {
           // Handle image saving/updating error
@@ -123,7 +121,9 @@ router.put(
   upload.array('postImages', MAX_IMAGES), // Use multer middleware for new images
   async (req, res) => {
     const postId = req.query.postId;
-    const userId = "2001"; // TODO: Replace with actual authentication
+    const userId = req.user.uid;
+
+    console.log("edit post request by user:", userId);
 
     try {
       // Basic validation
@@ -196,8 +196,7 @@ router.put(
 // removePost
 router.delete('/removePost', authenticate, async (req, res) => {
     const postId = req.query.postId;
-    // TODO: Get actual user_id from session/token
-    const userId = "2001"; // Replace with actual authentication
+    const userId = req.user.uid;
 
     if (!userId) {
             return res.status(401).json({ error: 'You must be logged in to delete a post' });

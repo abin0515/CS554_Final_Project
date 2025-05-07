@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { POST_API_BASE_URL, LIKE_API_BASE_URL } from '../config';
-import './PostDetail.css'; // Import CSS file
 import { ArrowBack, MoreVert, Edit, Delete, ThumbUpAlt } from '@mui/icons-material';
+import { fetchWithAuth } from '../lib/Auth';
+import './PostDetail.css';
 
 // Placeholder for getting the current user ID - replace with your actual auth logic
 const getCurrentUserId = () => {
@@ -15,13 +16,13 @@ const getCurrentUserId = () => {
 // You could move this to a separate file later
 const ReplyForm = ({
     onSubmit,
-    
+
     parentReplyAuthor, // Display 'Replying to X'
     isLoading,
     initialContent = '',
     initialAnonymous = false,
     submitButtonText = 'Submit Reply',
-    
+
 }) => {
     const [content, setContent] = useState(initialContent);
     const [isAnonymous, setIsAnonymous] = useState(initialAnonymous);
@@ -104,7 +105,7 @@ function PostDetail() {
   const dropdownRef = useRef(null);
 
   // State for the MAIN reply form (replying directly to post)
- 
+
   const [isSubmittingMainReply, setIsSubmittingMainReply] = useState(false);
   const [mainReplyError, setMainReplyError] = useState(null);
   const [mainReplySuccess, setMainReplySuccess] = useState(null);
@@ -150,9 +151,9 @@ function PostDetail() {
         const response = await fetch(`${POST_API_BASE_URL}/posts/removePost?postId=${postId}`, {
           method: 'DELETE',
         });
-        
+
         const result = await response.json();
-        
+
         if (!response.ok || !result.success) {
             throw new Error(result.error || `Failed to delete post: ${response.statusText}`);
         }
@@ -221,7 +222,7 @@ function PostDetail() {
   // --- Toggle Sub-Replies Visibility ---
   const handleToggleSubReplies = (directReplyId) => {
       const isCurrentlyVisible = visibleSubRepliesId === directReplyId;
-      
+
       if (isCurrentlyVisible) {
           setVisibleSubRepliesId(null); // Hide
       } else {
@@ -300,7 +301,7 @@ function PostDetail() {
 
       } catch (e) {
           console.error("Error toggling like:", e);
-          
+
       } finally {
            // Remove loading state for this specific button
            setIsLiking(prev => ({ ...prev, [replyId]: false }));
@@ -372,26 +373,25 @@ function PostDetail() {
       if (!repliesData.success || !Array.isArray(repliesData.replies)) {
            throw new Error(repliesData.error || 'Failed to fetch replies or unexpected format.');
       }
-      
+
       const fetchedReplies = repliesData.replies;
-     
+
       // Set replies state early so they render even if status fetch fails
-      setReplies(fetchedReplies); 
+      setReplies(fetchedReplies);
 
       // --- 2. Fetch Liked Statuses for these Replies (using GET /list) ---
       let likedIdsSet = new Set(); // Use a Set for efficient lookup
       if (fetchedReplies.length > 0) {
         const replyIds = fetchedReplies.map(reply => reply._id);
-        
+
         // Note: Sending body with GET is non-standard, but required by current backend route
         try {
-          
           const statusResponse = await fetch(`http://localhost:3001/likes/list`, { // Target the GET /list route
             method: 'POST', // Use GET method
-            headers: { 'Content-Type': 'application/json' }, 
+            headers: { 'Content-Type': 'application/json' },
             // Attempt to send data in body (non-standard for GET)
-            body: JSON.stringify({ 
-              bizType: 'reply', 
+            body: JSON.stringify({
+              bizType: 'reply',
               bizIds: replyIds
               // userId is hardcoded in the backend service for now
             })
@@ -403,8 +403,8 @@ function PostDetail() {
           } else {
             const statusData = await statusResponse.json();
             // Backend route returns { success: true, result: [...] }
-            if (statusData.success && Array.isArray(statusData.result)) { 
-             
+            if (statusData.success && Array.isArray(statusData.result)) {
+
               // Store the liked IDs in a Set for quick checking later
               likedIdsSet = new Set(statusData.result);
             } else {
@@ -430,9 +430,9 @@ function PostDetail() {
           }
           // No need for else { initialLikedStatuses[reply._id] = false; } because default is falsy
       });
-      
+
       // Update states
-      setLikeCounts(prevCounts => ({ ...prevCounts, ...initialCounts })); 
+      setLikeCounts(prevCounts => ({ ...prevCounts, ...initialCounts }));
       setLikedStatuses(initialLikedStatuses); // Set the initial liked statuses
       console.log('Initialized likedStatuses:', initialLikedStatuses);
       // --------------------------------------
@@ -453,17 +453,9 @@ function PostDetail() {
     setMainReplySuccess(null);
     setReplyingToId(null); // Close any open sub-reply forms
 
-    const currentUserId = getCurrentUserId();
-    if (!currentUserId) {
-        setMainReplyError('User not logged in.'); // Or handle appropriately
-        setIsSubmittingMainReply(false);
-        return;
-    }
-
     const replyData = {
         post_id: postId,
         answer_id: null,
-        user_id: currentUserId,
         content: content,
         anonymity: isAnonymous,
         target_reply_id: null, // Direct reply to post
@@ -472,7 +464,7 @@ function PostDetail() {
 
     try {
        console.log('Sending anonymously:', replyData.anonymity);
-       const response = await fetch(`${POST_API_BASE_URL}/replies/create`, {
+       const response = await fetchWithAuth(`${POST_API_BASE_URL}/replies/create`, {
            method: 'POST',
            headers: {
                'Content-Type': 'application/json',
@@ -514,17 +506,9 @@ function PostDetail() {
     setMainReplyError(null); // Clear main messages
     setMainReplySuccess(null);
 
-    const currentUserId = getCurrentUserId();
-    if (!currentUserId) {
-        setMainReplyError('User not logged in.'); // Or handle appropriately
-        setIsSubmittingMainReply(false);
-        return;
-    }
-
     const replyData = {
         post_id: postId,
         answer_id: parentReply.answer_id === null ? parentReply._id : parentReply.answer_id ,
-        user_id: currentUserId,
         content: content,
         anonymity: isAnonymous,
         target_reply_id: parentReply._id,
@@ -532,7 +516,7 @@ function PostDetail() {
     };
 
      try {
-        const response = await fetch(`${POST_API_BASE_URL}/replies/create`, {
+        const response = await fetchWithAuth(`${POST_API_BASE_URL}/replies/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -631,7 +615,7 @@ function PostDetail() {
   const getImageFullUrl = (relativePath) => {
     if (relativePath.startsWith('http')) {
       return relativePath;
-    } 
+    }
     return `${POST_API_BASE_URL.replace(/\/$/, '')}/${relativePath.replace(/^\//, '')}`;
   };
 
@@ -640,7 +624,7 @@ function PostDetail() {
 
   return (
     <>
-      <div className="post-detail-container"> 
+      <div className="post-detail-container">
         <div className="post-detail-top-actions">
         <button onClick={handleBack} className="back-button" title="Go Back">
           <ArrowBack />
@@ -666,15 +650,15 @@ function PostDetail() {
         </div>
 
         <h1 className="post-detail-title">{post.title}</h1>
-        
+
         {Array.isArray(post.image_urls) && post.image_urls.length > 0 && (
           <div className="post-detail-image-gallery">
             {post.image_urls.map((url, index) => (
-              <img 
-                key={index} 
-                src={getImageFullUrl(url)} 
-                alt={`${post.title} - Image ${index + 1}`} 
-                className="post-detail-image" 
+              <img
+                key={index}
+                src={getImageFullUrl(url)}
+                alt={`${post.title} - Image ${index + 1}`}
+                className="post-detail-image"
               />
             ))}
           </div>
@@ -702,7 +686,7 @@ function PostDetail() {
         {repliesLoading && <div>Loading replies...</div>}
         {repliesError && <div className="error-message">Error loading replies: {repliesError}</div>}
         {!repliesLoading && !repliesError && (
-            directReplies.length === 0 
+            directReplies.length === 0
             ? (<div>Be the first to reply!</div>)
             : (directReplies.map(reply => { // Start of map for direct replies
                 const isSubRepliesVisible = visibleSubRepliesId === reply._id;
@@ -761,18 +745,18 @@ function PostDetail() {
                         </button>
                     </div>
 
-                    {/* Conditionally render the Sub-Reply Form */} 
+                    {/* Conditionally render the Sub-Reply Form */}
                     {replyingToId === reply._id && (
                         <ReplyForm
                             onSubmit={(content, isAnonymous) => handleSubmitSubReply(reply, content, isAnonymous)}
-                            onCancel={() => setReplyingToId(null)} 
+                            onCancel={() => setReplyingToId(null)}
                             parentReplyAuthor={reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`}
-                            isLoading={isSubmittingMainReply} 
+                            isLoading={isSubmittingMainReply}
                             submitButtonText="Submit Reply"
                         />
                     )}
 
-                    {/* Conditionally render the Sub-Replies List */} 
+                    {/* Conditionally render the Sub-Replies List */}
                     {isSubRepliesVisible && (
                         <div className="sub-replies-container">
                             {isLoadingSubReplies && <div>Loading sub-replies...</div>}
@@ -823,13 +807,13 @@ function PostDetail() {
                                                     Reply
                                                 </button>
                                             </div>
-                                            {/* Conditionally render the Reply Form for this sub-reply */} 
+                                            {/* Conditionally render the Reply Form for this sub-reply */}
                                             {replyingToId === subReply._id && (
                                                 <ReplyForm
                                                     onSubmit={(content, isAnonymous) => handleSubmitSubReply(subReply, content, isAnonymous)} // Pass subReply as parentReply
-                                                    onCancel={() => setReplyingToId(null)} 
-                                                    parentReplyAuthor={subReply.anonymity ? 'Anonymous User' : `User ${subReply.user_id}`} 
-                                                    isLoading={isSubmittingMainReply} 
+                                                    onCancel={() => setReplyingToId(null)}
+                                                    parentReplyAuthor={subReply.anonymity ? 'Anonymous User' : `User ${subReply.user_id}`}
+                                                    isLoading={isSubmittingMainReply}
                                                     submitButtonText="Submit Reply" // Keep button text simple
                                                 />
                                             )}
@@ -842,10 +826,10 @@ function PostDetail() {
                     </div>
                 ); // End return for direct reply map
             })) // End map over directReplies
-        )} 
+        )}
       </div>
     </>
   );
 }
 
-export default PostDetail; 
+export default PostDetail;
