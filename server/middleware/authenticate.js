@@ -4,22 +4,28 @@ import fs from "fs";
 
 // Initialize Firebase Admin once
 if (!admin.apps.length) {
-    // Get service account file path from env var
-    const serviceAccountPath = process.env.FIREBASE_ADMIN_CERT_JSON_PATH;
+    let serviceAccountPath = process.env.FIREBASE_ADMIN_CERT_JSON_PATH;
+
+    // If no cert path is provided in ENV, load test certificate
     if (!serviceAccountPath) {
-        throw new Error("FIREBASE_ADMIN_CERT_JSON_PATH environment variable is not set. Admin cert JSON blob can be acquired from Firebase console.");
+        console.info("Env var FIREBASE_ADMIN_CERT_JSON_PATH is not set.")
+        console.info(" - Loading test certificate from server/test/firebase-admin-cert.json")
+        console.info(" - If you want to use your own Firebase project, please set this env var and update frontend config.");
+        serviceAccountPath = path.join("test", "firebase-admin-cert.json");
     }
 
-    // Read and parse the service account JSON file
     const serviceAccountAbsolutePath = path.isAbsolute(serviceAccountPath)
         ? serviceAccountPath
         : path.join(process.cwd(), serviceAccountPath);
+
+    // Read and parse the service account JSON file
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountAbsolutePath, "utf8"));
 
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
     });
 }
+
 
 
 export async function authenticate(req, res, next) {

@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express from 'express';
 import session from 'express-session'
 import cors from 'cors';
@@ -18,7 +17,7 @@ const __dirname = path.dirname(__filename);
 app.use(cors()); // Allows all origins by default
 
 // Static files middleware - Serve files from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public'))); 
+app.use(express.static(path.join(__dirname, 'public')));
 // This will make http://localhost:3000/uploads/posts/your-image.jpg work
 
 // If you want requests to /images/your-image.jpg to map to /public/uploads/posts/your-image.jpg:
