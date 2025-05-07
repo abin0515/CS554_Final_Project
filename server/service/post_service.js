@@ -1,6 +1,9 @@
 import * as postData from '../data/posts.js';
 import { ObjectId } from 'mongodb';
-
+import { publishMessage } from '../config/rabbitmq.js';
+const EXCHANGE_NAME = 'app_events';
+const EXCHANGE_TYPE = 'direct';
+const POST_EVENT_POINTS_BINDING_KEY = 'posts.event.points'; // POST_EVENT_POINTS -> posts/event/increment user points
 /**
  * Get a post by its ID
  * @param {string} postId - the ID of the post to retrieve
@@ -55,6 +58,19 @@ export async function createPost(title, content, user_id, type) {
     // Call data layer to persist the post
     // This now returns the full post object including the generated _id
     const newPost = await postData.createPostInDB(title, content, initialImageUrls, user_id, type);
+    if(newPost){
+        // send message to points server
+        const messagePayload2PointsServer = {
+            userId: user_id,
+            type: 3, // type 3 for create post event
+            point: 5,
+            timestamp: new Date().toISOString()
+        };
+        const sendToPointsServerSuccess = await publishMessage(EXCHANGE_NAME, POST_EVENT_POINTS_BINDING_KEY, messagePayload2PointsServer, EXCHANGE_TYPE);
+        if (!sendToPointsServerSuccess) {
+            console.warn(`Failed to publish create post event for post ${newPost._id} to RabbitMQ.`);
+        }
+    }
     return newPost;
 }
 

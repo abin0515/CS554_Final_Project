@@ -8,18 +8,18 @@ const redisClient = await getRedisConnection();
 const EXCHANGE_NAME = 'app_events';
 const EXCHANGE_TYPE = 'direct';
 
-// --- Temporary setup for testing --- 
-const TEST_QUEUE_NAME = 'post_server_queue';
-const TEST_BINDING_KEY = 'test.event.ping';
-const BINDING_KEY = 'likes.event.like';
+
+const LIKE_EVENT_LIKE_BINDING_KEY = 'likes.event.like'; // LIKE_EVENT_LIKE -> like/event/change post related like number
+const LIKE_EVENT_POINTS_BINDING_KEY = 'likes.event.points'; // LIKE_EVENT_POINTS -> like/event/increment user points
+
 
 
 // Ensure RabbitMQ connection, exchange, queue, and binding are setup on load
 // NOTE: Queue/Binding setup should ideally be done by the consumer.
-connectRabbitMQ(EXCHANGE_NAME, EXCHANGE_TYPE, TEST_QUEUE_NAME, TEST_BINDING_KEY)
-    .catch(err => {
-        console.error(`Initial RabbitMQ setup failed:`, err)
-    });
+// connectRabbitMQ(EXCHANGE_NAME, EXCHANGE_TYPE, POST_QUEUE_NAME, LIKE_EVENT_LIKE_BINDING_KEY)
+//     .catch(err => {
+//         console.error(`Initial RabbitMQ setup failed:`, err)
+//     });
 export const getLikesStatusByBizIds = async (bizType, bizIds) => {
     const userId = '2001';// user hardcoded for now
     const result = [];
@@ -45,26 +45,36 @@ export const addLikeRecord = async (bizId, bizType, liked) => {
     const bizTypeTotalLikeKey = `${LIKE_COUNT_KEY_PREFIX}${bizType}`;
     await redisClient.hSet(bizTypeTotalLikeKey, bizId, likedTimes.toString()); // Store count as string
     
-    // If the like/unlike operation changed the state, publish an event
+    // If the like/unlike operation changed the state, publish the original event
     if (flag) {
-        const routingKey = BINDING_KEY; // Use a descriptive key for actual events
-        // Simpler Payload Structure:
-        const messagePayload = {
+        
+        const messagePayload2PostServer = {
             bizId: bizId,
             liked : liked ? 'true' : 'false',
-            userId: userId, // Include user ID
-            timestamp: new Date()
+            userId: userId, 
+            timestamp: new Date().toISOString()
         };
-
-        console.log(`Attempting to publish like event to exchange '${EXCHANGE_NAME}' with routing key '${routingKey}':`, messagePayload);
-
-        const success = await publishMessage(EXCHANGE_NAME, routingKey, messagePayload, EXCHANGE_TYPE);
-
-        if (!success) {
+        // console.log(`Attempting to publish LIKE event to exchange '${EXCHANGE_NAME}' with routing key '${routingKey}':`, messagePayload);
+        const sendToPostServerSuccess = await publishMessage(EXCHANGE_NAME, LIKE_EVENT_LIKE_BINDING_KEY, messagePayload2PostServer, EXCHANGE_TYPE);
+        if (!sendToPostServerSuccess) {
             console.warn(`Failed to publish like event for bizId ${bizId} to RabbitMQ.`);
-            // Add further error handling if needed (e.g., add to a retry queue)
+        }
+        
+    }
+    if(liked && flag){ 
+        const messagePayload2PointsServer = {
+            
+            userId: userId, 
+            point: 2,
+            timestamp: new Date().toISOString()
+        };
+        const sendToPointsServerSuccess = await publishMessage(EXCHANGE_NAME, LIKE_EVENT_POINTS_BINDING_KEY, messagePayload2PointsServer, EXCHANGE_TYPE);
+        if (!sendToPointsServerSuccess) {
+            console.warn(`Failed to publish like event for bizId ${bizId} to RabbitMQ.`);
         }
     }
+
+    
 };
 
 const doLiked = async (bizId, userId) => {

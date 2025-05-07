@@ -127,6 +127,7 @@ export const getSubRepliesByAnswerIdFromDB = async (postId, answerId) => {
     });
 };
 export const incrementReplyLikeTimes = async (bizId) => {
+    console.log('incrementReplyLikeTimes', bizId);
     
     const updateResult = await repliesCollection.updateOne(
         { _id: new ObjectId(bizId) },
@@ -136,6 +137,7 @@ export const incrementReplyLikeTimes = async (bizId) => {
 }
 
 export const decrementReplyLikeTimes = async (bizId) => {
+    console.log('decrementReplyLikeTimes', bizId);
     const updatedReply = await repliesCollection.findOneAndUpdate(
         { _id: new ObjectId(bizId), liked_times: { $gt: 0 } }, 
         { $inc: { liked_times: -1 }, $set: { update_time: new Date() } },

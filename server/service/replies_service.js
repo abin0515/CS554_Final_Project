@@ -18,7 +18,10 @@ import {
     incrementPostTotalLikeNumInDB,
     decrementPostTotalLikeNumInDB
 } from '../data/posts.js';
-
+import { publishMessage } from '../config/rabbitmq.js';
+const EXCHANGE_NAME = 'app_events';
+const EXCHANGE_TYPE = 'direct';
+const REPLIES_EVENT_POINTS_BINDING_KEY = 'replies.event.points';
 /**
  * Creates a new reply for a post.
  * @param {string} postId - The ID of the post being replied to.
@@ -77,8 +80,17 @@ const createReply = async (
     try {
         // Increment post reply count
         await incrementPostReplyCountInDB(post_id);
-
-    
+        // send message to points server
+        const messagePayload2PointsServer = {
+            userId: user_id,
+            type: 2, // type 2 for reply event
+            point: 2,
+            timestamp: new Date().toISOString()
+        };
+        const sendToPointsServerSuccess = await publishMessage(EXCHANGE_NAME, REPLIES_EVENT_POINTS_BINDING_KEY, messagePayload2PointsServer, EXCHANGE_TYPE);
+        if (!sendToPointsServerSuccess) {
+            console.warn(`Failed to publish reply event for post ${post_id} to RabbitMQ.`);
+        }
     } catch (updateError) {
         // Log this error, but the reply creation itself was successful
         // Consider a more robust error handling/logging strategy

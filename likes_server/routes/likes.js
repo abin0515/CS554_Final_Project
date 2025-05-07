@@ -3,21 +3,9 @@ import { getRedisConnection } from '../config/redisConnection.js';
 import { addLikeRecord, getLikesStatusByBizIds } from '../service/likes_service.js';
 import { connectRabbitMQ, publishMessage } from '../config/rabbitmq.js';
 
-// Define exchange name and type
-const EXCHANGE_NAME = 'app_events';
-const EXCHANGE_TYPE = 'direct';
-
-// --- Temporary setup for testing --- 
-const TEST_QUEUE_NAME = 'point_server_queue';
-const TEST_BINDING_KEY = 'likes.event.like';
 
 
-// Ensure RabbitMQ connection, exchange, queue, and binding are setup on load
-// NOTE: Queue/Binding setup should ideally be done by the consumer.
-connectRabbitMQ(EXCHANGE_NAME, EXCHANGE_TYPE, TEST_QUEUE_NAME, TEST_BINDING_KEY)
-    .catch(err => {
-        console.error(`Initial RabbitMQ setup failed:`, err)
-    });
+
 const router = Router();
 
 
@@ -73,58 +61,6 @@ router.post('/list', async (req, res) => {
     }
 });
 
-// --- Updated Test MQ Endpoint ---
-router.post('/test-mq', async (req, res) => {
-    // Use the specific test routing key for publishing
-    const routingKey = TEST_BINDING_KEY; // Use the key we bound the queue with
-    const testMessage = `Test message from /test-mq with key ${routingKey}`;
-    const messagePayload = { message: testMessage, timestamp: new Date() };
 
-    console.log(`Attempting to publish test message to exchange '${EXCHANGE_NAME}' with routing key '${routingKey}':`, messagePayload);
-    
-    const success = await publishMessage(EXCHANGE_NAME, routingKey, messagePayload, EXCHANGE_TYPE);
-
-    if (success) {
-        res.status(200).json({ success: true, message: `Message published to exchange '${EXCHANGE_NAME}' with key '${routingKey}' (Queue '${TEST_QUEUE_NAME}' should receive it)` });
-    } else {
-        res.status(500).json({ success: false, message: `Failed to publish message to exchange '${EXCHANGE_NAME}'` });
-    }
-});
-// --- End Test MQ Endpoint ---
-
-// Test Route for Redis Connection
-router.get('/test-redis-connection', async (req, res) => {
-  console.log('Attempting to test Redis connection...');
-  let redisClient; // Define variable to hold the client
-  try {
-    redisClient = await getRedisConnection(); // Get the Redis client instance
-    // Send a PING command to Redis
-    const reply = await redisClient.ping();
-    console.log('Redis PING response:', reply);
-
-    if (reply === 'PONG') {
-      res.status(200).json({ 
-        success: true, 
-        message: 'Successfully connected to Redis and received PONG!' 
-      });
-    } else {
-      // Should not happen if ping() resolves, but good practice
-      res.status(500).json({ 
-        success: false, 
-        error: 'Received unexpected response from Redis PING',
-        response: reply
-      });
-    }
-  } catch (e) {
-    console.error("Redis connection test failed:", e);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to connect to Redis or execute PING command.', 
-      details: e.message 
-    });
-  } 
-  // Note: We might not want to close the connection here if it's shared
-  // await closeRedisConnection(); // Consider connection management strategy
-});
 
 export default router;

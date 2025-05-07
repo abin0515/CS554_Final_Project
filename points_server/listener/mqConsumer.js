@@ -1,12 +1,17 @@
 import amqp from 'amqplib';
 // import { handleLikesTask } from '../service/replies_service.js';
+import { handlePointsUpdate } from '../service/points_service.js'; // Placeholder for actual points task handler
+
+
 // Configuration - Ensure these match the publisher (likes_server)
 const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://myuser:mypassword@18.188.222.62:5672/';
 const EXCHANGE_NAME = 'app_events';
 const EXCHANGE_TYPE = 'direct';
-const QUEUE_NAME = 'point_server_queue'; // Queue for the point server (or this main server)
-const BINDING_KEY = 'likes.event.like';   // The specific key to listen for from the test endpoint
+const QUEUE_NAME = 'points_server_queue'; // Queue for the point server (or this main server)
 
+const LIKES_EVENT_POINTS_BINDING_KEY = 'likes.event.points';  // likes/event/increment user points
+const REPLIES_EVENT_POINTS_BINDING_KEY = 'replies.event.points'; // replies/event/increment user points
+const POST_EVENT_POINTS_BINDING_KEY = 'posts.event.points'; // posts/event/increment user points
 let connection = null;
 let channel = null;
 
@@ -25,30 +30,49 @@ export async function startConsumer() {
         console.log(`(Consumer: ${QUEUE_NAME}) Asserting queue '${QUEUE_NAME}'...`);
         await channel.assertQueue(QUEUE_NAME, { durable: true });
 
-        console.log(`(Consumer: ${QUEUE_NAME}) Binding queue to exchange '${EXCHANGE_NAME}' with key '${BINDING_KEY}'...`);
-        await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, BINDING_KEY);
+        console.log(`(Consumer: ${QUEUE_NAME}) Binding queue to exchange '${EXCHANGE_NAME}' with key '${LIKES_EVENT_POINTS_BINDING_KEY}'...`);
+        await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, LIKES_EVENT_POINTS_BINDING_KEY);
+        await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, REPLIES_EVENT_POINTS_BINDING_KEY);
+        await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, POST_EVENT_POINTS_BINDING_KEY);
 
-        
 
-        // Start consuming messages
-        channel.consume(QUEUE_NAME, (msg) => {
+        console.log(`(Consumer: ${QUEUE_NAME}) Waiting for messages...`);
+
+        channel.consume(QUEUE_NAME, async (msg) => {
             if (msg !== null) {
                 try {
                     const messageContent = msg.content.toString();
                     const message = JSON.parse(messageContent);
-                    console.log(`(Consumer: ${QUEUE_NAME}) Received message with key '${msg.fields.routingKey}':`, message);
+                    console.log(`(Consumer: ${QUEUE_NAME}) Received message with routing key '${msg.fields.routingKey}':`, message);
 
-                    // ** TODO: Add specific logic for point server here later **
-                    // handleLikesTask(message.bizId, message.userId, message.liked);  
-                    // Acknowledge the message
+                    // Dispatch based on routing key
+                    // type 1: likes.event.points
+                    switch (msg.fields.routingKey) {
+                        case LIKES_EVENT_POINTS_BINDING_KEY:
+                            //  type 1 for likes event
+                            await handlePointsUpdate(message, 1); 
+                            break;
+                        case REPLIES_EVENT_POINTS_BINDING_KEY:
+                            //  type 2 for replies event
+                            await handlePointsUpdate(message, 2); 
+                            break;
+                        case POST_EVENT_POINTS_BINDING_KEY:
+                            //  type 3 for posts event
+                            await handlePointsUpdate(message, 3); 
+                            break;
+                        default:
+                            console.warn(`(Consumer: ${QUEUE_NAME}) Received message with unknown routing key: ${msg.fields.routingKey}`);
+                            // Decide if you want to ack, nack, or ignore
+                            break;
+                    }
                     channel.ack(msg);
                 } catch (error) {
-                    console.error(`(Consumer: ${QUEUE_NAME}) Error processing message:`, error);
-                    channel.nack(msg, false, false); // Reject without requeue
+                    console.error(`(Consumer: ${QUEUE_NAME}) Error processing message:`, error, msg.content.toString());
+                    channel.nack(msg, false, false); // Reject without requeue for parse/handler errors
                 }
             }
         }, {
-            noAck: false // Manual acknowledgement
+            noAck: false
         });
 
         connection.on('error', (err) => {
