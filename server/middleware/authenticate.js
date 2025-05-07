@@ -10,7 +10,7 @@ if (!admin.apps.length) {
     if (!serviceAccountPath) {
         console.warn("Warning: env var FIREBASE_ADMIN_CERT_JSON_PATH is not set.")
         console.warn(" - Loading test certificate from server/test/firebase-admin-cert.json")
-        console.warn(" - This Firebase admin certificate should only be used for testing and not in production.");
+        console.warn(" - If you want to use your own Firebase project, please set this env var and update frontend config.");
         serviceAccountPath = path.join("test", "firebase-admin-cert.json");
     }
 

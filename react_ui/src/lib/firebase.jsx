@@ -1,15 +1,19 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth }      from 'firebase/auth';
 
+// This is the test Firebase config hosted by Han Zheng.
+// If you want to use your own Firebase project, please
+// remember to set FIREBASE_ADMIN_CERT_JSON_PATH in
+// backend server too!
 const firebaseConfig = {
-    apiKey: "AIzaSyBuvr6Qdi5DrWZtKRQ5T7vv6aLYSc50y-I",
-    authDomain: "cs554-final-25f.firebaseapp.com",
-    projectId: "cs554-final-25f",
-    storageBucket: "cs554-final-25f.firebasestorage.app",
-    messagingSenderId: "296943628133",
-    appId: "1:296943628133:web:f063ba9bc361cd72c73b8c",
-    measurementId: "G-9E18SHJNKQ"
-  };
+    apiKey: "AIzaSyBB3I9c1nANybm2C70IXua8NWfHBjujSZk",
+    authDomain: "cs554-final-9810c.firebaseapp.com",
+    projectId: "cs554-final-9810c",
+    storageBucket: "cs554-final-9810c.firebasestorage.app",
+    messagingSenderId: "635894362025",
+    appId: "1:635894362025:web:03d54f6cdac3a4deaadeb8",
+    measurementId: "G-6NMM2GFF69"
+};
 
 const app  = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
