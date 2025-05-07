@@ -1,10 +1,10 @@
 import amqp from 'amqplib';
-import { handleLikesTask } from '../service/replies_service.js';
+// import { handleLikesTask } from '../service/replies_service.js';
 // Configuration - Ensure these match the publisher (likes_server)
 const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://myuser:mypassword@18.188.222.62:5672/';
 const EXCHANGE_NAME = 'app_events';
 const EXCHANGE_TYPE = 'direct';
-const QUEUE_NAME = 'post_server_queue'; // Queue for the point server (or this main server)
+const QUEUE_NAME = 'point_server_queue'; // Queue for the point server (or this main server)
 const BINDING_KEY = 'likes.event.like';   // The specific key to listen for from the test endpoint
 
 let connection = null;
@@ -39,7 +39,7 @@ export async function startConsumer() {
                     console.log(`(Consumer: ${QUEUE_NAME}) Received message with key '${msg.fields.routingKey}':`, message);
 
                     // ** TODO: Add specific logic for point server here later **
-                    handleLikesTask(message.bizId, message.userId, message.liked);  
+                    // handleLikesTask(message.bizId, message.userId, message.liked);  
                     // Acknowledge the message
                     channel.ack(msg);
                 } catch (error) {

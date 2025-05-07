@@ -1,0 +1,21 @@
+{
+  "name": "cs-554-Final-Project",
+  "version": "1.0.0",
+  "description": "cs-554-Final-Project",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "license": "SIT",
+  "dependencies": {
+    "amqplib": "^0.10.7",
+    "bcrypt": "^5.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "mongodb": "5.0.0",
+    "node-fetch": "^2.6.7",
+    "redis": "^4.6.7"
+  }
+}

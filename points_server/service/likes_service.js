@@ -9,9 +9,8 @@ const EXCHANGE_NAME = 'app_events';
 const EXCHANGE_TYPE = 'direct';
 
 // --- Temporary setup for testing --- 
-const TEST_QUEUE_NAME = 'post_server_queue';
+const TEST_QUEUE_NAME = 'point_server_queue';
 const TEST_BINDING_KEY = 'test.event.ping';
-const BINDING_KEY = 'likes.event.like';
 
 
 // Ensure RabbitMQ connection, exchange, queue, and binding are setup on load
@@ -47,7 +46,7 @@ export const addLikeRecord = async (bizId, bizType, liked) => {
     
     // If the like/unlike operation changed the state, publish an event
     if (flag) {
-        const routingKey = BINDING_KEY; // Use a descriptive key for actual events
+        const routingKey = TEST_BINDING_KEY; // Use a descriptive key for actual events
         // Simpler Payload Structure:
         const messagePayload = {
             bizId: bizId,
