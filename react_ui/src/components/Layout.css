@@ -60,6 +60,7 @@
   padding: 1rem;
   font-size: 0.95rem;
   color: #374151;
+  align-self: flex-start;
 }
 
 .create-post-button {
