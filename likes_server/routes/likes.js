@@ -37,8 +37,9 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 // POST /list - Fetch initial liked statuses
-router.post('/list', async (req, res) => {
+router.post('/list', authenticate, async (req, res) => {
     const { bizType, bizIds } = req.body;
+    const userId = req.user.uid;
     // Assuming userId is hardcoded in service as per previous state
     if (!bizType || !Array.isArray(bizIds) || bizIds.length === 0) {
         return res.status(400).json({
@@ -47,7 +48,7 @@ router.post('/list', async (req, res) => {
         });
     }
     try {
-        const result = await getLikesStatusByBizIds(bizType, bizIds);
+        const result = await getLikesStatusByBizIds(bizType, bizIds, userId);
         res.status(200).json({
             success: true,
             message: 'Successfully retrieved liked statuses for user',

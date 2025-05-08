@@ -362,7 +362,7 @@ function PostDetail() {
 
         // Note: Sending body with GET is non-standard, but required by current backend route
         try {
-          const statusResponse = await fetch(`http://localhost:3001/likes/list`, { // Target the GET /list route
+          const statusResponse = await fetchWithAuth  (`${LIKE_API_BASE_URL}/likes/list`, { // Target the GET /list route
             method: 'POST', // Use GET method
             headers: { 'Content-Type': 'application/json' },
             // Attempt to send data in body (non-standard for GET)

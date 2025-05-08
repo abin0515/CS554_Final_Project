@@ -20,8 +20,8 @@ const LIKE_EVENT_POINTS_BINDING_KEY = 'likes.event.points'; // LIKE_EVENT_POINTS
 //     .catch(err => {
 //         console.error(`Initial RabbitMQ setup failed:`, err)
 //     });
-export const getLikesStatusByBizIds = async (bizType, bizIds) => {
-    const userId = '2001';// user hardcoded for now
+export const getLikesStatusByBizIds = async (bizType, bizIds, userId) => {
+    
     const result = [];
     for (const bizId of bizIds) {
         const key = `${LIKE_BIZ_KEY_PREFIX}${bizId}`;
