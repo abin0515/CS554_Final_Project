@@ -1,0 +1,71 @@
+/* Leaderboard.css */
+.leaderboard-container {
+  width: 100%; /* Take full width of parent */
+  height: 400px; /* Fixed height - can be adjusted or made dynamic */
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-y: auto; /* Add scroll if content exceeds height */
+  font-family: sans-serif;
+  border: 1px solid #e0e0e0;
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.leaderboard-title {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.2em;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9em;
+}
+
+.leaderboard-table th {
+  background-color: #f0f0f0;
+  color: #555;
+  font-weight: bold;
+}
+
+.leaderboard-table td:nth-child(1), /* Rank column */
+.leaderboard-table td:nth-child(3) { /* Points column */
+  text-align: center;
+  width: 20%;
+}
+
+.leaderboard-table td:nth-child(2) { /* Name column */
+  width: 60%;
+}
+
+
+.leaderboard-table tr:last-child td {
+  border-bottom: none;
+}
+
+.current-user-row {
+  background-color: #e7f3ff; /* Light blue highlight for current user */
+  font-weight: bold;
+}
+
+.current-user-row td:nth-child(2) { /* Name column for current user */
+  color: #0056b3; /* Darker blue for current user name */
+}
+
+
+.leaderboard-empty {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+} 

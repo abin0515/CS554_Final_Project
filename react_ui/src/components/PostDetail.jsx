@@ -236,17 +236,15 @@ function PostDetail() {
 
       if (isLiking[replyId]) {
         console.log("Already processing like/unlike for this reply.");
-        return; // Prevent double-clicks
+        return;
       }
 
-      // Set loading state for this specific button
       setIsLiking(prev => ({ ...prev, [replyId]: true }));
 
       const isCurrentlyLiked = !!likedStatuses[replyId];
       const newLikedState = !isCurrentlyLiked;
-      const originalLikeCount = likeCounts[replyId] ?? (reply.liked_times || 0); // Store original count for rollback
+      const originalLikeCount = likeCounts[replyId] ?? (reply.liked_times || 0);
 
-      // Optimistic UI updates
       setLikedStatuses(prev => ({ ...prev, [replyId]: newLikedState }));
       setLikeCounts(prev => ({
         ...prev,
@@ -255,39 +253,33 @@ function PostDetail() {
 
       const requestBody = {
           bizId: replyId,
-          bizType: 'reply', // Hardcoded as per requirement
+          bizType: 'reply',
           liked: newLikedState,
       };
 
       try {
           console.log('Sending like request:', requestBody);
-          // Capture the response
-          const response = await fetchWithAuth(`${LIKE_API_BASE_URL}/likes`, { // Use your likes endpoint URL
+          const response = await fetchWithAuth(`${LIKE_API_BASE_URL}/likes`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
+
               },
               body: JSON.stringify(requestBody),
           });
 
-          // Check if the request was successful (status code 2xx)
           if (!response.ok) {
-              // Rollback optimistic updates on failure
               console.error("Like request failed, rolling back UI.", response.status, response.statusText);
               setLikedStatuses(prev => ({ ...prev, [replyId]: isCurrentlyLiked }));
-              setLikeCounts(prev => ({ ...prev, [replyId]: originalLikeCount })); // Revert count
-              // Throw an error to be caught by the catch block
+              setLikeCounts(prev => ({ ...prev, [replyId]: originalLikeCount }));
               throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
           }
-
 
           console.log(`Like status updated successfully for reply ${replyId} to ${newLikedState}`);
 
       } catch (e) {
           console.error("Error toggling like:", e);
-
       } finally {
-           // Remove loading state for this specific button
            setIsLiking(prev => ({ ...prev, [replyId]: false }));
       }
   };

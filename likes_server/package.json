@@ -17,6 +17,7 @@
     "firebase-admin": "^13.3.0",
     "mongodb": "5.0.0",
     "node-fetch": "^2.6.7",
-    "redis": "^4.6.7"
+    "redis": "^4.6.7",
+    "firebase-admin": "^13.3.0"
   }
 }
