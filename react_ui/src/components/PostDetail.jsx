@@ -5,13 +5,6 @@ import { ArrowBack, MoreVert, Edit, Delete, ThumbUpAlt } from '@mui/icons-materi
 import { fetchWithAuth } from '../lib/Auth';
 import './PostDetail.css';
 
-// Placeholder for getting the current user ID - replace with your actual auth logic
-const getCurrentUserId = () => {
-  // Example: retrieve from local storage, context, etc.
-  // IMPORTANT: Replace this with your actual implementation
-  return localStorage.getItem('userId') || '2001'; // Replace placeholder ID
-};
-
 // Reusable Reply Form Component (Optional but good practice)
 // You could move this to a separate file later
 const ReplyForm = ({
@@ -240,13 +233,7 @@ function PostDetail() {
   // --- Handle Like/Unlike Toggle (with API Call) ---
   const handleLikeToggle = async (reply) => {
       const replyId = reply._id;
-      const currentUserId = getCurrentUserId();
 
-      if (!currentUserId) {
-          console.error("User not identified. Cannot like/unlike.");
-          // Optionally show an error message to the user
-          return;
-      }
       if (isLiking[replyId]) {
         console.log("Already processing like/unlike for this reply.");
         return; // Prevent double-clicks
@@ -270,18 +257,15 @@ function PostDetail() {
           bizId: replyId,
           bizType: 'reply', // Hardcoded as per requirement
           liked: newLikedState,
-          // userId: currentUserId // Include userId
       };
 
       try {
           console.log('Sending like request:', requestBody);
           // Capture the response
-          const response = await fetch(`${LIKE_API_BASE_URL}/likes`, { // Use your likes endpoint URL
+          const response = await fetchWithAuth(`${LIKE_API_BASE_URL}/likes`, { // Use your likes endpoint URL
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
-                   // Add Authorization header if needed
-                  // 'Authorization': `Bearer ${your_auth_token}`
               },
               body: JSON.stringify(requestBody),
           });
