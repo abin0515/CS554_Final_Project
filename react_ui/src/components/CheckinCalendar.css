@@ -1,0 +1,141 @@
+/* react_ui/src/components/CheckinCalendar.css */
+.checkin-calendar-container {
+  width: 100%; /* Take full width of parent */
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-family: sans-serif;
+  border: 1px solid #e0e0e0;
+  box-sizing: border-box;
+  margin-top: 20px; /* Add some space below the leaderboard */
+}
+
+.checkin-calendar-title {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.checkin-calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* Ensure columns are evenly spaced */
+}
+
+.checkin-calendar-table th {
+  font-weight: bold;
+  color: #666;
+  padding-bottom: 10px;
+  text-align: center;
+  font-size: 0.8em;
+}
+
+.checkin-calendar-table td {
+  text-align: center;
+  height: 35px; /* Fixed height for cells */
+  vertical-align: middle;
+  border: 1px solid #f0f0f0; /* Light border for cells */
+  font-size: 0.85em;
+  position: relative; /* For positioning the check mark */
+}
+
+.checkin-calendar-table td.other-month .day-number {
+  color: #ccc; /* Dim days from other months */
+  opacity: 0.6;
+}
+
+.day-number {
+  display: inline-block;
+  padding: 5px;
+  min-width: 24px; /* Ensure space for check mark */
+  line-height: 1;
+}
+
+/* Style for today's date */
+.checkin-calendar-table td.today {
+  background-color: #fff9e6; /* Light yellow background for today */
+}
+
+/* Style for today's date when clickable (not checked in) */
+.checkin-calendar-table td.today.clickable {
+  cursor: pointer;
+  background-color: #e6f7ff; /* Light blue background for clickable */
+}
+.checkin-calendar-table td.today.clickable:hover {
+  background-color: #cceeff; /* Slightly darker blue on hover */
+}
+
+/* Hide day number when button is shown */
+.checkin-calendar-table td.clickable .day-number {
+  /* display: none; */ /* Removing this to keep day number visible */
+}
+
+/* Simple Check-in Button Style - Now rendered inside the cell */
+.checkin-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8em;
+  transition: background-color 0.2s ease;
+  /* Position it if needed, but inline might be okay */
+}
+
+.checkin-button:hover {
+  background-color: #218838;
+}
+
+.checkin-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Simple loading indicator */
+.checking-in-spinner {
+  font-size: 0.9em;
+  color: #555;
+}
+
+/* Existing checked-in style adjustment */
+.day-number.checked-in {
+  /* Ensure it overrides button if check-in happens */
+  background-color: #007bff;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+  display: inline-flex; /* Align checkmark nicely */
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  min-width: 24px;
+  min-height: 24px; /* Ensure circle shape */
+  box-sizing: border-box;
+}
+
+.check-mark {
+  color: white; /* Make checkmark white */
+  font-size: 0.9em;
+  /* margin-left: 2px; */ /* Removed if using flex align */
+}
+
+.checkin-loading,
+.checkin-error {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+}
+
+/* Ensure other-month doesn't get clickable styling */
+.checkin-calendar-table td.other-month.clickable {
+    cursor: default;
+    background-color: transparent;
+}
+.checkin-calendar-table td.other-month.clickable:hover {
+    background-color: transparent;
+} 

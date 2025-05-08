@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { POST_API_BASE_URL, LIKE_API_BASE_URL } from '../config';
 import { ArrowBack, MoreVert, Edit, Delete, ThumbUpAlt } from '@mui/icons-material';
 import { fetchWithAuth } from '../lib/Auth';
+import { useAuth } from '../context/AuthContext';
 import './PostDetail.css';
 
 // Reusable Reply Form Component (Optional but good practice)
@@ -23,6 +24,7 @@ const ReplyForm = ({
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
         setError(null);
         if (content.trim().length === 0) {
             setError('Reply content cannot be empty.');
@@ -90,6 +92,8 @@ const ReplyForm = ({
 function PostDetail() {
   const [searchParams] = useSearchParams();
   const postId = searchParams.get('postId');
+  const { currentUser } = useAuth();
+  const currentUserId = currentUser ? currentUser.uid : null;
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,7 +102,6 @@ function PostDetail() {
   const dropdownRef = useRef(null);
 
   // State for the MAIN reply form (replying directly to post)
-
   const [isSubmittingMainReply, setIsSubmittingMainReply] = useState(false);
   const [mainReplyError, setMainReplyError] = useState(null);
   const [mainReplySuccess, setMainReplySuccess] = useState(null);
@@ -111,7 +114,6 @@ function PostDetail() {
   // State for SUB-REPLY form (replying to a specific reply)
   const [replyingToId, setReplyingToId] = useState(null); // ID of the reply being replied to
 
-
   // State for showing/hiding and storing sub-replies
   const [visibleSubRepliesId, setVisibleSubRepliesId] = useState(null); // ID of the direct reply whose sub-replies are visible
   const [subRepliesData, setSubRepliesData] = useState({}); // Stores { [parentReplyId]: { loading, error, list } }
@@ -120,7 +122,6 @@ function PostDetail() {
   const [likedStatuses, setLikedStatuses] = useState({}); // { [replyId]: boolean }
   const [likeCounts, setLikeCounts] = useState({}); // { [replyId]: number } - For optimistic updates
   const [isLiking, setIsLiking] = useState({}); // { [replyId]: boolean } - Re-introducing loading state
-
 
   const handleBack = () => {
     navigate(-1);
@@ -131,17 +132,25 @@ function PostDetail() {
   };
 
   const handleEdit = () => {
+    if (!currentUser) {
+        alert("Please sign in to edit posts.");
+        return;
+    }
     navigate(`/posts/edit?postId=${postId}`);
     setIsDropdownOpen(false);
   };
 
   const handleDelete = async () => {
+    if (!currentUser) {
+        alert("Please sign in to delete posts.");
+        return;
+    }
     setIsDropdownOpen(false);
     if (window.confirm('Are you sure you want to delete this post and all its associated images?')) {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${POST_API_BASE_URL}/posts/removePost?postId=${postId}`, {
+        const response = await fetchWithAuth(`${POST_API_BASE_URL}/posts/removePost?postId=${postId}`, {
           method: 'DELETE',
         });
 
@@ -164,8 +173,11 @@ function PostDetail() {
 
   // --- Toggle Sub-Reply Form ---
   const handleToggleReplyForm = (replyId) => {
+      if (!currentUser) {
+          alert("Please sign in to reply.");
+          return;
+      }
       setReplyingToId(currentId => (currentId === replyId ? null : replyId));
-      // Reset main form messages if user interacts with sub-reply
       setMainReplyError(null);
       setMainReplySuccess(null);
   };
@@ -232,8 +244,16 @@ function PostDetail() {
 
   // --- Handle Like/Unlike Toggle (with API Call) ---
   const handleLikeToggle = async (reply) => {
+      if (!currentUser) {
+          alert("Please sign in to like replies.");
+          return;
+      }
+      
       const replyId = reply._id;
-
+      if (!currentUserId) {
+          console.error("User not identified. Cannot like/unlike.");
+          return;
+      }
       if (isLiking[replyId]) {
         console.log("Already processing like/unlike for this reply.");
         return;
@@ -263,7 +283,6 @@ function PostDetail() {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
-
               },
               body: JSON.stringify(requestBody),
           });
@@ -424,18 +443,25 @@ function PostDetail() {
 
   // --- Submit Handlers --- (Like count initialization added previously)
   const handleSubmitMainReply = async (content, isAnonymous) => {
+    // Check if user is logged in
+    if (!currentUser) {
+      alert("Please sign in to submit a reply.");
+      setIsSubmittingMainReply(false); // Ensure loading state is reset if we return early
+      return; 
+    }
+
     setIsSubmittingMainReply(true);
     setMainReplyError(null);
     setMainReplySuccess(null);
-    setReplyingToId(null); // Close any open sub-reply forms
+    setReplyingToId(null); 
 
     const replyData = {
         post_id: postId,
         answer_id: null,
         content: content,
         anonymity: isAnonymous,
-        target_reply_id: null, // Direct reply to post
-        target_user_id: null   // Direct reply to post
+        target_reply_id: null, 
+        target_user_id: null   
     };
 
     try {
@@ -444,7 +470,6 @@ function PostDetail() {
            method: 'POST',
            headers: {
                'Content-Type': 'application/json',
-               // 'Authorization': `Bearer ${your_auth_token}`
            },
            body: JSON.stringify(replyData),
        });
@@ -478,8 +503,15 @@ function PostDetail() {
   };
 
   const handleSubmitSubReply = async (parentReply, content, isAnonymous) => {
+     // Check if user is logged in
+    if (!currentUser) {
+      alert("Please sign in to submit a reply.");
+      setIsSubmittingMainReply(false); // Ensure loading state is reset if we return early
+      return; 
+    }
+
     setIsSubmittingMainReply(true); // Reuse main loading state for now
-    setMainReplyError(null); // Clear main messages
+    setMainReplyError(null); 
     setMainReplySuccess(null);
 
     const replyData = {
@@ -496,7 +528,6 @@ function PostDetail() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // 'Authorization': `Bearer ${your_auth_token}`
             },
             body: JSON.stringify(replyData),
         });

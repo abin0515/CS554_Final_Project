@@ -26,3 +26,5 @@ export const handlePointsUpdate = async (message, type) => {
     }
     return pointsRecord; // Return the MongoDB record
 }
+
+

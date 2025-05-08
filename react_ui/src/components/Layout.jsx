@@ -3,17 +3,27 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import './Layout.css';
 import HeaderBar from './HeaderBar';
 import Leaderboard from './Leaderboard';
+import CheckinCalendar from './CheckinCalendar';
+import { useAuth } from '../context/AuthContext';
 
 function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   // Determine if the current page is the profile page
   // Assuming the profile page route is '/profile' or starts with '/profile/'
   const isProfilePage = location.pathname.startsWith('/profile');
 
   const handleCreateClick = () => {
-    navigate('/posts/create');
+    // Check if user is logged in before navigating
+    if (currentUser) {
+      navigate('/posts/create');
+    } else {
+      alert("Please sign in to create a post.");
+      // Optionally, you could redirect to a login page here
+      // navigate('/login');
+    }
   };
 
   return (
@@ -38,6 +48,7 @@ function Layout() {
           {!isProfilePage && 
             <div className="app-right">
               <Leaderboard />
+              {currentUser && <CheckinCalendar />}
             </div>
           }
         </div>

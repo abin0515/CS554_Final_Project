@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { POST_API_BASE_URL } from '../config';
 import { fetchWithAuth } from '../lib/Auth';
+import { useAuth } from '../context/AuthContext';
 import './CreatePost.css';
 
 const MAX_IMAGES = 6;
@@ -14,6 +15,14 @@ function CreatePost() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  useEffect(() => {
+    if (currentUser === null) {
+      alert("Please sign in to create a post.");
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
 
   const handleCancel = () => navigate(-1);
 
