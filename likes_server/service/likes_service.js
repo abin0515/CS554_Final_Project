@@ -34,8 +34,8 @@ export const getLikesStatusByBizIds = async (bizType, bizIds) => {
     return result;
 };
 
-export const addLikeRecord = async (bizId, bizType, liked) => {
-    const userId = '2001';// user hardcoded for now
+export const addLikeRecord = async (bizId, bizType, liked, userId) => {
+    
 
     const flag = liked ? await doLiked(bizId, userId) : await doUnliked(bizId, userId);
 

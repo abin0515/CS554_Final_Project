@@ -2,7 +2,7 @@ import { Router } from "express";
 import { getRedisConnection } from '../config/redisConnection.js';
 import { addLikeRecord, getLikesStatusByBizIds } from '../service/likes_service.js';
 import { connectRabbitMQ, publishMessage } from '../config/rabbitmq.js';
-
+import { authenticate } from '../middleware/authenticate.js';
 
 
 
@@ -14,12 +14,14 @@ const router = Router();
 
 
 // POST / - Handle Like/Unlike (Original logic)
-router.post('/', async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
     const { bizId, bizType, liked } = req.body;
     try {
         // Assuming addLikeRecord is synchronous for now or doesn't need await here
         // If addLikeRecord becomes async and needs handling, adjust this.
-        addLikeRecord(bizId, bizType, liked);
+        const userId = req.user.uid;
+       
+        addLikeRecord(bizId, bizType, liked, userId);
         res.status(200).json({
             success: true,
             message: 'Successfully updated like status', // Keep updated message or revert if preferred
