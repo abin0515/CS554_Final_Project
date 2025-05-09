@@ -10,19 +10,24 @@ function PostList() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${POST_API_BASE_URL}/posts/page?page=1`);
+        const response = await fetch(`${POST_API_BASE_URL}/posts/page?page=${currentPage}`);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         if (data.success) {
           setPosts(data.posts);
+          setTotalPages(Math.ceil((data.totalPosts || 0) / 10));
+          console.log(data.totalPosts);
         } else {
           throw new Error(data.error || 'Failed to fetch posts from API');
         }
@@ -34,7 +39,7 @@ function PostList() {
     };
 
     fetchPosts();
-  }, []);
+  }, [currentPage]);
 
   if (loading) return <div>Loading posts...</div>;
   if (error) return <div className="error-message">Error fetching posts: {error}</div>;
@@ -57,7 +62,18 @@ function PostList() {
           </div>
         ))
       ) : (
-        <div>No posts found.</div>
+        !loading && !error && <div>No posts found.</div>
+      )}
+      {totalPages > 0 && (
+        <div className="pagination-controls">
+          <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
+            Previous
+          </button>
+          <span>Page {currentPage} of {totalPages}</span>
+          <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>
+            Next
+          </button>
+        </div>
       )}
     </div>
   );

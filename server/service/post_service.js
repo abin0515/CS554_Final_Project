@@ -175,7 +175,14 @@ export async function getPostsByPage(page = 1) {
     if (typeof page !== 'number' || page < 1 || !Number.isInteger(page)) {
         throw new Error('Invalid page number');
     }
-    
+    const posts = await postData.getPostsByPageFromDB(page);
+
+    // get total posts
+    const totalPosts = await postData.getTotalPostsFromDB();
+
     // Call data layer to fetch paginated posts
-    return await postData.getPostsByPageFromDB(page);
+    return {
+        posts: posts,
+        totalPosts: totalPosts
+    }
 } 

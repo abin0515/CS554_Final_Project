@@ -147,6 +147,14 @@ export async function getPostsByPageFromDB(page) {
 }
 
 /**
+ * Get total posts from the database
+ * @returns {Promise<number>} - total number of posts
+ */
+export async function getTotalPostsFromDB() {
+    return await postsCollection.countDocuments();
+}
+
+/**
  * Increments the reply_times count for a specific post.
  * @param {string} postId - The ID of the post to update.
  * @returns {Promise<boolean>} True if the update was acknowledged.

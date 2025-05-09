@@ -637,23 +637,24 @@ function PostDetail() {
           <ArrowBack />
         </button>
 
-          <div className="more-options-container">
-          <button onClick={toggleDropdown} className="more-options-button" title="More Options">
-            <MoreVert />
-          </button>
+          {currentUser && post && currentUser.uid === post.user_id && (
+            <div className="more-options-container">
+              <button onClick={toggleDropdown} className="more-options-button" title="More Options">
+                <MoreVert />
+              </button>
 
-            {isDropdownOpen && (
-              <div className="options-dropdown" ref={dropdownRef}>
-                <button onClick={handleEdit} className="dropdown-button edit-button">
-                  <Edit /> Edit
-                </button>
-                <button onClick={handleDelete} className="dropdown-button delete-button">
-                  <Delete /> Delete
-                </button>
-
-              </div>
-            )}
-          </div>
+              {isDropdownOpen && (
+                <div className="options-dropdown" ref={dropdownRef}>
+                  <button onClick={handleEdit} className="dropdown-button edit-button">
+                    <Edit /> Edit
+                  </button>
+                  <button onClick={handleDelete} className="dropdown-button delete-button">
+                    <Delete /> Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <h1 className="post-detail-title">{post.title}</h1>

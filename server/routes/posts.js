@@ -74,7 +74,7 @@ router.get('/page', async (req, res) => {
         let page = req.query.page ? parseInt(req.query.page) : 1;
         // console.log(page);
         // Call the service layer
-        const posts = await postService.getPostsByPage(page);
+        const { posts, totalPosts } = await postService.getPostsByPage(page);
 
         // Return the posts along with pagination info
         res.status(200).json({
@@ -82,7 +82,7 @@ router.get('/page', async (req, res) => {
             currentPage: page,
             posts: posts,
             postsPerPage: 10,
-            totalPosts: posts.length
+            totalPosts: totalPosts
         });
     } catch (e) {
         res.status(500).json({ error: e.message });
