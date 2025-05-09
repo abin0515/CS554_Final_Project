@@ -4,6 +4,7 @@ import { POST_API_BASE_URL, LIKE_API_BASE_URL } from '../../config';
 import { ArrowBack, MoreVert, Edit, Delete, ThumbUpAlt } from '@mui/icons-material';
 import { fetchWithAuth } from '../../lib/Auth';
 import { useAuth } from '../../context/AuthContext';
+import DisplayName from '../auth/UserDisplayName';
 import './PostDetail.css';
 
 // Reusable Reply Form Component (Optional but good practice)
@@ -24,7 +25,7 @@ const ReplyForm = ({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         setError(null);
         if (content.trim().length === 0) {
             setError('Reply content cannot be empty.');
@@ -248,7 +249,7 @@ function PostDetail() {
           alert("Please sign in to like replies.");
           return;
       }
-      
+
       const replyId = reply._id;
       if (!currentUserId) {
           console.error("User not identified. Cannot like/unlike.");
@@ -447,21 +448,21 @@ function PostDetail() {
     if (!currentUser) {
       alert("Please sign in to submit a reply.");
       setIsSubmittingMainReply(false); // Ensure loading state is reset if we return early
-      return; 
+      return;
     }
 
     setIsSubmittingMainReply(true);
     setMainReplyError(null);
     setMainReplySuccess(null);
-    setReplyingToId(null); 
+    setReplyingToId(null);
 
     const replyData = {
         post_id: postId,
         answer_id: null,
         content: content,
         anonymity: isAnonymous,
-        target_reply_id: null, 
-        target_user_id: null   
+        target_reply_id: null,
+        target_user_id: null
     };
 
     try {
@@ -507,11 +508,11 @@ function PostDetail() {
     if (!currentUser) {
       alert("Please sign in to submit a reply.");
       setIsSubmittingMainReply(false); // Ensure loading state is reset if we return early
-      return; 
+      return;
     }
 
     setIsSubmittingMainReply(true); // Reuse main loading state for now
-    setMainReplyError(null); 
+    setMainReplyError(null);
     setMainReplySuccess(null);
 
     const replyData = {
@@ -534,8 +535,10 @@ function PostDetail() {
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.error || 'Failed');
 
+        const user_display_name = fetchUserDisplayName(parentReply.user_id)
+
         setReplyingToId(null);
-        setMainReplySuccess(`Reply to ${parentReply.anonymity ? 'Anonymous User' : `User ${parentReply.user_id}`} submitted!`);
+        setMainReplySuccess(`Reply to ${parentReply.anonymity ? 'Anonymous User' : user_display_name} submitted!`);
 
         // Update parent reply's reply_times count in the main replies list
         setReplies(prevReplies => prevReplies.map(r =>
@@ -714,7 +717,7 @@ function PostDetail() {
                     <div key={reply._id} className="reply-item">
                     <div className="reply-header">
                         <span className="reply-author">
-                        {reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`}
+                        <DisplayName userId={reply.user_id} anonymity={reply.anonymity} />
                         </span>
                         <span className="reply-timestamp">
                         {new Date(reply.create_time).toLocaleString()}
@@ -783,11 +786,9 @@ function PostDetail() {
                                         <div key={subReply._id} className="sub-reply-item">
                                             <div className="reply-header">
                                                 <span className="reply-author">
-                                                    {subReply.anonymity ? 'Anonymous' : `User ${subReply.user_id}`}
+                                                    <DisplayName userId={subReply.user_id} anonymity={subReply.anonymity} />
                                                     {subReply.target_reply_id &&
-                                                        <> replied to {subReply.target_user_id
-                                                                        ? `User ${subReply.target_user_id}`
-                                                                        : 'Anonymous User'}
+                                                        <> replied to <DisplayName userId={subReply.target_user_id} anonymity={subReply.anonymity} />
                                                         </>
                                                     }
                                                 </span>

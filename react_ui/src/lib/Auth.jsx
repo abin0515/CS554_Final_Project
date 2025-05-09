@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { auth as firebaseAuth } from './firebase';
 import { onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
+import { POST_API_BASE_URL } from '../config';
 
 export function useAuth() {
     const [user, setUser] = useState(null);
@@ -34,6 +35,27 @@ export function signUpNewAccount(email, password){
     return createUserWithEmailAndPassword(firebaseAuth, email, password)
 }
 
+const usernameCache = {};
+
+export async function fetchUserDisplayName(uid) {
+    if (usernameCache[uid]) {
+        return usernameCache[uid];
+    }
+    try {
+        const response = await fetch(`${POST_API_BASE_URL}/displayName/${uid}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        const data = await response.json();
+
+        const displayName = data.displayName;
+        usernameCache[uid] = displayName;
+        return displayName;
+    } catch (error) {
+        console.error("Error fetching username:", error);
+        return "Error User Name";
+    }
+}
 
 export async function fetchWithAuth(url, options = {}) {
     const user = firebaseAuth.currentUser;
