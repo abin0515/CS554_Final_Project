@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { POST_API_BASE_URL } from '../config';
-import { fetchWithAuth } from '../lib/Auth';
+import { POST_API_BASE_URL } from '../../config';
+import { fetchWithAuth } from '../../lib/Auth';
 import './CreatePost.css'; // Reuse CreatePost styles for now
 
 const MAX_IMAGES = 6;

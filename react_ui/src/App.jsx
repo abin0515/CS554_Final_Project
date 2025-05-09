@@ -7,10 +7,10 @@ import './App.css';
 
 // Import Components
 import Layout from './components/Layout';
-import PostList from './components/PostList';
-import PostDetail from './components/PostDetail';
-import CreatePost from './components/CreatePost';
-import EditPost from './components/EditPost';
+import PostList from './components/post/PostList';
+import PostDetail from './components/post/PostDetail';
+import CreatePost from './components/post/CreatePost';
+import EditPost from './components/post/EditPost';
 import UserProfile from './components/UserProfile';
 
 function App() {

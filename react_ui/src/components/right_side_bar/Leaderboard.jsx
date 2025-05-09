@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import { fetchWithAuth } from '../lib/Auth'; // Assuming fetchWithAuth is available
-import { POINTS_API_BASE_URL } from '../config'; // Assuming you have this in config
+import { AuthContext } from '../../context/AuthContext';
+import { fetchWithAuth } from '../../lib/Auth'; // Assuming fetchWithAuth is available
+import { POINTS_API_BASE_URL } from '../../config'; // Assuming you have this in config
 import './Leaderboard.css';
 
-const Leaderboard = () => {
+const Leaderboard = ({ refreshKey }) => {
   const { currentUser } = useContext(AuthContext); // Get user from context
   const [currentUserData, setCurrentUserData] = useState(null); 
   const [leaderboardEntries, setLeaderboardEntries] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  console.log('[Leaderboard] Received refreshKey prop:', refreshKey);
+
   useEffect(() => {
+    console.log('[Leaderboard] useEffect triggered with refreshKey:', refreshKey);
     const fetchLeaderboardData = async () => {
       setLoading(true);
       setError(null);
@@ -61,8 +64,9 @@ const Leaderboard = () => {
     };
 
     fetchLeaderboardData();
-  // Add currentUser to dependency array! This triggers re-fetch on login/logout.
-  }, [currentUser]); 
+  // Add currentUser and refreshKey to dependency array! 
+  // This triggers re-fetch on login/logout or when refreshKey changes.
+  }, [currentUser, refreshKey]); 
 
   return (
     <div className="leaderboard-container">

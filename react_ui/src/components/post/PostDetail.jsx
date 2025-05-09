@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { POST_API_BASE_URL, LIKE_API_BASE_URL } from '../config';
+import { POST_API_BASE_URL, LIKE_API_BASE_URL } from '../../config';
 import { ArrowBack, MoreVert, Edit, Delete, ThumbUpAlt } from '@mui/icons-material';
-import { fetchWithAuth } from '../lib/Auth';
-import { useAuth } from '../context/AuthContext';
+import { fetchWithAuth } from '../../lib/Auth';
+import { useAuth } from '../../context/AuthContext';
 import './PostDetail.css';
 
 // Reusable Reply Form Component (Optional but good practice)

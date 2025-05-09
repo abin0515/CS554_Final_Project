@@ -2,8 +2,7 @@ import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import './Layout.css';
 import HeaderBar from './HeaderBar';
-import Leaderboard from './Leaderboard';
-import CheckinCalendar from './CheckinCalendar';
+import RightSideBar from './right_side_bar/RightSideBar';
 import { useAuth } from '../context/AuthContext';
 
 function Layout() {
@@ -47,8 +46,7 @@ function Layout() {
           </div>
           {!isProfilePage && 
             <div className="app-right">
-              <Leaderboard />
-              {currentUser && <CheckinCalendar />}
+              <RightSideBar />
             </div>
           }
         </div>

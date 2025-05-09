@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { POST_API_BASE_URL } from '../config';
-import { fetchWithAuth } from '../lib/Auth';
-import { useAuth } from '../context/AuthContext';
+import { POST_API_BASE_URL } from '../../config';
+import { fetchWithAuth } from '../../lib/Auth';
+import { useAuth } from '../../context/AuthContext';
 import './CreatePost.css';
 
 const MAX_IMAGES = 6;

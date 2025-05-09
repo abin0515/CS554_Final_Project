@@ -1,11 +1,11 @@
 // react_ui/src/components/CheckinCalendar.jsx
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext'; // Use useAuth hook
-import { fetchWithAuth } from '../lib/Auth';
-import { POINTS_API_BASE_URL } from '../config';
+import { useAuth } from '../../context/AuthContext'; // Use useAuth hook
+import { fetchWithAuth } from '../../lib/Auth';
+import { POINTS_API_BASE_URL } from '../../config';
 import './CheckinCalendar.css';
 
-const CheckinCalendar = () => {
+const CheckinCalendar = ({ onCheckinSuccess }) => {
   const { currentUser } = useAuth(); // Get user from context
   const [checkinData, setCheckinData] = useState([]); // Array like [0, 1, 0...]
   const [isCheckingIn, setIsCheckingIn] = useState(false);
@@ -67,9 +67,19 @@ const CheckinCalendar = () => {
       
       console.log("Check-in successful:", result);
       // Refresh check-in data to show the update
-      await fetchCheckinData(); 
+      const fetched = await fetchCheckinData(); 
       // Optionally display success message or points awarded (result.reward_points)
       alert(`Checked in successfully! Consecutive days: ${result.consecutiveDays}. Points awarded: ${result.reward_points}`);
+      
+      console.log('[CheckinCalendar] Fetched calendar data after check-in:', fetched);
+      if (fetched && onCheckinSuccess) { 
+        console.log('[CheckinCalendar] Calling onCheckinSuccess');
+        onCheckinSuccess();
+      } else if (!fetched) {
+        console.log('[CheckinCalendar] Not calling onCheckinSuccess because fetched is false.');
+      } else if (!onCheckinSuccess) {
+        console.log('[CheckinCalendar] Not calling onCheckinSuccess because prop is missing.');
+      }
       // TODO: Trigger leaderboard refresh if needed
 
     } catch (e) {
