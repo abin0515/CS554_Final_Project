@@ -3,9 +3,19 @@ import dotenv from 'dotenv';
 
 dotenv.config(); // Load .env file
 
+const TEST_OPENAI_API_KEY_BASE64 = "c2stcHJvai1CLW12Sm84bFU4TUxpUkFIUmxBNnJHLUdqZkwwQmdfVGJBUUlubU82QjBVb3FkMVU0enJaeDAwcDNfekdaOS04M1lGWFRZOXB5UVQzQmxia0ZKZHlsWlBVWlhvUzctVWVEZ0NfMGVucXRjUTdaUFk5OFdYbzRDamdtLTlFa09FQkNyeEhWZHlJWnBHSE1PaHVKUnlMR0NYeWJVOEE="
+
+let openaiApiKey;
+if (process.env.OPENAI_API_KEY) {
+  openaiApiKey = process.env.OPENAI_API_KEY;
+} else {
+    console.info("Env var OPENAI_API_KEY is not set.")
+    console.info(" - Using test OpenAI API key instead")
+  openaiApiKey = Buffer.from(TEST_OPENAI_API_KEY_BASE64, "base64").toString("utf8");
+}
+
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-   
+    apiKey: openaiApiKey,
 });
 
 // --- Define your local functions that OpenAI can call (default tools) ---
@@ -101,7 +111,7 @@ const processChat = async (userMessages, systemPrompt = null, toolsOverride = de
                 console.warn(`[ChatService] Function ${functionName} not found or not implemented.`);
                 functionResponseContent = `Error: Function ${functionName} is not implemented on the server.`;
             }
-            
+
             currentMessages.push({
                 tool_call_id: toolCall.id,
                 role: "tool",
