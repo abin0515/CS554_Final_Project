@@ -444,17 +444,49 @@ function PostDetail() {
 
   // --- Submit Handlers --- (Like count initialization added previously)
   const handleSubmitMainReply = async (content, isAnonymous) => {
-    // Check if user is logged in
     if (!currentUser) {
       alert("Please sign in to submit a reply.");
-      setIsSubmittingMainReply(false); // Ensure loading state is reset if we return early
+      setIsSubmittingMainReply(false);
       return;
     }
 
     setIsSubmittingMainReply(true);
     setMainReplyError(null);
     setMainReplySuccess(null);
-    setReplyingToId(null);
+    // No need to setReplyingToId(null) here as this is for main replies
+
+    // --- MODERATION CHECK for Main Reply ---
+    try {
+      console.log("[PostDetail] Sending main reply content for moderation:", content);
+      const moderationResponse = await fetchWithAuth(`${POST_API_BASE_URL}/chat/submitchcek`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: content }]
+        }),
+      });
+
+      const moderationResult = await moderationResponse.json();
+      console.log("[PostDetail] Main reply moderation result:", moderationResult);
+
+      if (!moderationResponse.ok) {
+        throw new Error(moderationResult.error || moderationResult.details || `Moderation check failed with status: ${moderationResponse.status}`);
+      }
+      
+      if (!moderationResult.isSafe) {
+        alert(`Reply cannot be submitted: Please be polite -- MotherDucker.`);
+        setIsSubmittingMainReply(false);
+        return; // Stop submission
+      }
+    } catch (moderationError) {
+      console.error("[PostDetail] Error during main reply content moderation:", moderationError);
+      alert(`Moderation check failed: ${moderationError.message}. Please try again.`);
+      setIsSubmittingMainReply(false);
+      return; // Stop submission
+    }
+    // --- END MODERATION CHECK ---
 
     const replyData = {
         post_id: postId,
@@ -482,38 +514,64 @@ function PostDetail() {
        }
 
        setMainReplySuccess('Reply submitted successfully!');
-
-       // Add the new reply to the top of the list
        if (result.reply) {
-           // --- Initialize like count for new reply ---
            setLikeCounts(prev => ({...prev, [result.reply._id]: 0}));
-           // --------------------------------------------
            setReplies(prevReplies => [result.reply, ...prevReplies]);
        }
-
        setPost(prevPost => ({ ...prevPost, reply_times: (prevPost.reply_times || 0) + 1 }));
        setTimeout(() => setMainReplySuccess(null), 3000);
-
     } catch (e) {
         setMainReplyError(`Submit failed: ${e.message}`);
         console.error("Main reply submission error:", e);
-         setTimeout(() => setMainReplyError(null), 5000);
+        setTimeout(() => setMainReplyError(null), 5000);
     } finally {
         setIsSubmittingMainReply(false);
     }
   };
 
   const handleSubmitSubReply = async (parentReply, content, isAnonymous) => {
-     // Check if user is logged in
     if (!currentUser) {
       alert("Please sign in to submit a reply.");
-      setIsSubmittingMainReply(false); // Ensure loading state is reset if we return early
-      return;
+      setIsSubmittingMainReply(false);
+      return; 
     }
 
-    setIsSubmittingMainReply(true); // Reuse main loading state for now
-    setMainReplyError(null);
+    setIsSubmittingMainReply(true); 
+    setMainReplyError(null); 
     setMainReplySuccess(null);
+
+    // --- MODERATION CHECK for Sub Reply ---
+    try {
+      console.log("[PostDetail] Sending sub-reply content for moderation:", content);
+      const moderationResponse = await fetchWithAuth(`${POST_API_BASE_URL}/chat/submitchcek`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: content }]
+        }),
+      });
+
+      const moderationResult = await moderationResponse.json();
+      console.log("[PostDetail] Sub-reply moderation result:", moderationResult);
+
+      if (!moderationResponse.ok) {
+        throw new Error(moderationResult.error || moderationResult.details || `Moderation check failed with status: ${moderationResponse.status}`);
+      }
+      
+      if (!moderationResult.isSafe) {
+        alert(`Reply cannot be submitted: Please be polite -- MotherDucker.`);
+        setIsSubmittingMainReply(false);
+        return; // Stop submission
+      }
+    } catch (moderationError) {
+      console.error("[PostDetail] Error during sub-reply content moderation:", moderationError);
+      alert(`Moderation check failed: ${moderationError.message}. Please try again.`);
+      setIsSubmittingMainReply(false);
+      return; // Stop submission
+    }
+    // --- END MODERATION CHECK ---
 
     const replyData = {
         post_id: postId,
@@ -535,19 +593,18 @@ function PostDetail() {
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.error || 'Failed');
 
-        const user_display_name = fetchUserDisplayName(parentReply.user_id)
+        // Correctly form the user identifier for the success message
+        const targetUserIdentifier = parentReply.anonymity ? 'Anonymous User' : (parentReply.user_id ? `User ${parentReply.user_id}` : 'User');
 
         setReplyingToId(null);
-        setMainReplySuccess(`Reply to ${parentReply.anonymity ? 'Anonymous User' : user_display_name} submitted!`);
+        setMainReplySuccess(`Reply to ${targetUserIdentifier} submitted!`);
 
-        // Update parent reply's reply_times count in the main replies list
         setReplies(prevReplies => prevReplies.map(r =>
             r._id === parentReply._id
              ? { ...r, reply_times: (r.reply_times || 0) + 1 }
              : r
         ));
 
-        // Update parent reply's reply_times count if it exists within a sub-reply list
         if (parentReply.answer_id !== null) {
             setSubRepliesData(prevData => {
                 const parentParentId = parentReply.answer_id;
@@ -566,15 +623,10 @@ function PostDetail() {
             });
         }
 
-        // Add the new sub-reply to the correct sub-reply list
         if (result.reply) {
-            // --- Initialize like count for new sub-reply ---
              setLikeCounts(prev => ({...prev, [result.reply._id]: 0}));
-             // --------------------------------------------------
-
             setSubRepliesData(prev => {
                 const topLevelParentId = parentReply.answer_id === null ? parentReply._id : parentReply.answer_id;
-
                 if (prev[topLevelParentId]) {
                     return {
                         ...prev,
@@ -584,14 +636,10 @@ function PostDetail() {
                         }
                     };
                 }
-                return prev;
+                return prev; // Should ideally handle case where topLevelParentId might not exist yet
             });
         }
-
         setTimeout(() => setMainReplySuccess(null), 3000);
-
-        // No reload needed with optimistic updates
-
      } catch (e) {
         setMainReplyError(`Sub-reply failed: ${e.message}`);
         console.error("Sub-reply submission error:", e);

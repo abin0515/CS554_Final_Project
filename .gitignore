@@ -8,6 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 sample-firebase-ai-app-63823-firebase-adminsdk-fbsvc-b4b8a42c9b.json
+test/firebase-admin-cert.json
+test/firebase-admin-cert.b64
 
 .cursorrules
 node_modules
@@ -26,3 +28,9 @@ package-lock.json
 *.njsproj
 *.sln
 *.sw?
+
+# .env files
+.env
+backend/.env
+server/.env
+# Add other specific .env paths if they exist elsewhere

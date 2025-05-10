@@ -72,6 +72,43 @@ function CreatePost() {
     if (!content.trim()) return setError('Content cannot be empty.');
 
     setLoading(true);
+
+    // --- MODERATION CHECK ---
+    try {
+      console.log("Sending content for moderation:", content);
+      // Assuming CHAT_API_BASE_URL is defined in your config.js, e.g., 'http://localhost:3001'
+      // If not, replace CHAT_API_BASE_URL with the actual base URL for your 'server' backend
+      const moderationResponse = await fetchWithAuth(`${POST_API_BASE_URL}/chat/submitchcek`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: content }]
+        }),
+      });
+
+      const moderationResult = await moderationResponse.json();
+      console.log("Moderation result:", moderationResult);
+
+      if (!moderationResponse.ok) {
+        // Handle non-2xx responses from moderation service as a failure to moderate
+        throw new Error(moderationResult.error || moderationResult.details || `Moderation check failed with status: ${moderationResponse.status}`);
+      }
+      
+      if (!moderationResult.isSafe) {
+        alert(`Post cannot be created: Please be polite -- MotherDucker.`);
+        setLoading(false);
+        return; // Stop submission
+      }
+    } catch (moderationError) {
+      console.error("Error during content moderation:", moderationError);
+      setError(`Moderation check failed: ${moderationError.message}. Please try again.`);
+      setLoading(false);
+      return; // Stop submission
+    }
+    // --- END MODERATION CHECK ---
+
     const formData = new FormData();
     formData.append('title', title);
     formData.append('content', content);

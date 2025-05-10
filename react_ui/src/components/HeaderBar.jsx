@@ -29,7 +29,7 @@ function HeaderBar() {
   return (
     <div className="app-header">
       <div className="site-title" onClick={() => navigate('/')}>
-        <span className="site-title-highlight">Mother</span>Duckers
+        <span className="site-title-highlight">Mother</span>Ducker
       </div>
 
       <div className="auth-info">

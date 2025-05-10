@@ -11,25 +11,16 @@ const Leaderboard = ({ refreshKey }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  console.log('[Leaderboard] Received refreshKey prop:', refreshKey);
-
   useEffect(() => {
-    console.log('[Leaderboard] useEffect triggered with refreshKey:', refreshKey);
     const fetchLeaderboardData = async () => {
       setLoading(true);
       setError(null);
-      // Use currentUser from context
       const isLoggedIn = !!currentUser;
       const currentUserId = currentUser ? currentUser.uid : null; 
 
       const endpoint = isLoggedIn ? `${POINTS_API_BASE_URL}/board` : `${POINTS_API_BASE_URL}/board/noAuth`;
 
       try {
-        console.log(`Fetching leaderboard from: ${endpoint}`);
-        
-        // Determine which fetch function to use. 
-        // Assuming fetchWithAuth handles auth and standard fetch is for no-auth cases.
-        // If fetchWithAuth can handle being called when not logged in, you can simplify this.
         const fetchFn = isLoggedIn ? fetchWithAuth : fetch;
 
         const response = await fetchFn(endpoint);
@@ -40,7 +31,7 @@ const Leaderboard = ({ refreshKey }) => {
               const errData = await response.json();
               errorMsg = errData.error || errorMsg;
           } catch {
-             // Ignore parsing error if body isn't JSON
+            // Ignore parsing error if response body isn't JSON or is empty
           }
           throw new Error(errorMsg);
         }
@@ -64,8 +55,6 @@ const Leaderboard = ({ refreshKey }) => {
     };
 
     fetchLeaderboardData();
-  // Add currentUser and refreshKey to dependency array! 
-  // This triggers re-fetch on login/logout or when refreshKey changes.
   }, [currentUser, refreshKey]); 
 
   return (

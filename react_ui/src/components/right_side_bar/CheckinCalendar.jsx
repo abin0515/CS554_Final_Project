@@ -68,17 +68,10 @@ const CheckinCalendar = ({ onCheckinSuccess }) => {
       console.log("Check-in successful:", result);
       // Refresh check-in data to show the update
       const fetched = await fetchCheckinData(); 
-      // Optionally display success message or points awarded (result.reward_points)
       alert(`Checked in successfully! Consecutive days: ${result.consecutiveDays}. Points awarded: ${result.reward_points}`);
       
-      console.log('[CheckinCalendar] Fetched calendar data after check-in:', fetched);
       if (fetched && onCheckinSuccess) { 
-        console.log('[CheckinCalendar] Calling onCheckinSuccess');
         onCheckinSuccess();
-      } else if (!fetched) {
-        console.log('[CheckinCalendar] Not calling onCheckinSuccess because fetched is false.');
-      } else if (!onCheckinSuccess) {
-        console.log('[CheckinCalendar] Not calling onCheckinSuccess because prop is missing.');
       }
       // TODO: Trigger leaderboard refresh if needed
 

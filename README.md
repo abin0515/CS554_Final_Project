@@ -55,4 +55,32 @@ npm start
 * REMEMBER to use credentials from the same Firebase project across front and backend!!
 
 
+## OpenAI API Integration (Chat Functionality)
+
+We have integrated OpenAI's API to enable advanced chat functionalities, including function calling. This is primarily handled in the `server` backend module.
+
+### Setup Instructions:
+
+1.  **Obtain an OpenAI API Key:**
+    You will need an API key from OpenAI to use these features. You can create and manage your API keys at the [OpenAI API Keys page](https://platform.openai.com/api-keys).
+
+2.  **Configure your `.env` file:**
+    In the root directory of the `server` backend module, you should have a `.env` file (if not, create one from `.env.example` or a new one).
+    Add your OpenAI API key to this `.env` file as follows:
+
+    ```
+    OPENAI_API_KEY=your_openai_api_key_here
+    ```
+
+    Replace `your_openai_api_key_here` with the actual key you obtained from the OpenAI platform.
+
+### Understanding Function Calling
+
+The chat service utilizes OpenAI's function calling capability. This allows the AI model to intelligently request to call predefined functions on our backend to retrieve information or perform actions, which it then uses to formulate its responses.
+
+For more details on how this works, please refer to the official OpenAI documentation on [Function Calling](https://platform.openai.com/docs/guides/function-calling?api-mode=chat&example=get-weather).
+
+This setup is crucial for the chat features in the `server` to work correctly. Ensure your API key is set up before running or testing these functionalities.
+
+
 
