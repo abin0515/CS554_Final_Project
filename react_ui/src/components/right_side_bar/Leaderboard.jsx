@@ -2,12 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { fetchWithAuth } from '../../lib/Auth'; // Assuming fetchWithAuth is available
 import { POINTS_API_BASE_URL } from '../../config'; // Assuming you have this in config
+import DisplayName from '../auth/UserDisplayName';
 import './Leaderboard.css';
 
 const Leaderboard = ({ refreshKey }) => {
   const { currentUser } = useContext(AuthContext); // Get user from context
-  const [currentUserData, setCurrentUserData] = useState(null); 
-  const [leaderboardEntries, setLeaderboardEntries] = useState([]); 
+  const [currentUserData, setCurrentUserData] = useState(null);
+  const [leaderboardEntries, setLeaderboardEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,7 +17,7 @@ const Leaderboard = ({ refreshKey }) => {
       setLoading(true);
       setError(null);
       const isLoggedIn = !!currentUser;
-      const currentUserId = currentUser ? currentUser.uid : null; 
+      const currentUserId = currentUser ? currentUser.uid : null;
 
       const endpoint = isLoggedIn ? `${POINTS_API_BASE_URL}/board` : `${POINTS_API_BASE_URL}/board/noAuth`;
 
@@ -24,7 +25,7 @@ const Leaderboard = ({ refreshKey }) => {
         const fetchFn = isLoggedIn ? fetchWithAuth : fetch;
 
         const response = await fetchFn(endpoint);
-        
+
         if (!response.ok) {
           let errorMsg = `HTTP error! status: ${response.status}`;
           try {
@@ -38,10 +39,10 @@ const Leaderboard = ({ refreshKey }) => {
         const data = await response.json();
 
         setCurrentUserData({
-            rank: data.rank,      
-            points: data.points,  
-            name: isLoggedIn ? "Me" : "", 
-            userId: currentUserId 
+            rank: data.rank,
+            points: data.points,
+            name: isLoggedIn ? "Me" : "",
+            userId: currentUserId
         });
 
         setLeaderboardEntries(data.board || []);
@@ -55,7 +56,7 @@ const Leaderboard = ({ refreshKey }) => {
     };
 
     fetchLeaderboardData();
-  }, [currentUser, refreshKey]); 
+  }, [currentUser, refreshKey]);
 
   return (
     <div className="leaderboard-container">
@@ -91,12 +92,15 @@ const Leaderboard = ({ refreshKey }) => {
             {/* Display Other Leaderboard Entries */}
             {leaderboardEntries.length > 0 ? (
               leaderboardEntries.map((user) => {
+                console.log(user);
                 return (
-                  <tr key={user.name}> 
+                  <tr key={user.name}>
                      <td>
                       {user.rank === 1 ? <span title="Rank 1">🏆</span> : user.rank}
                     </td>
-                    <td>{user.name}</td> 
+                    <td>
+                      <DisplayName userId={user.name} anonymity={false} />
+                    </td>
                     <td>{user.points}</td>
                   </tr>
                 );
@@ -116,4 +120,4 @@ const Leaderboard = ({ refreshKey }) => {
   );
 };
 
-export default Leaderboard; 
+export default Leaderboard;
