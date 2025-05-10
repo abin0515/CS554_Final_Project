@@ -35,10 +35,8 @@ if (!admin.apps.length && firebase_admin === null) {
 }
 
 export function getUserDisplayName(uid) {
-
-    return firebase_admin.auth().getUser(uid)
+    return firebase_admin.getUser(uid)
         .then((userRecord) => {
-            console.log("User data fetched successfully:", userRecord);
             const username = userRecord.displayName || userRecord.email || "Anonymous User";
             return username;
         })
