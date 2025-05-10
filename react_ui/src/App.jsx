@@ -12,10 +12,12 @@ import PostDetail from './components/post/PostDetail';
 import CreatePost from './components/post/CreatePost';
 import EditPost from './components/post/EditPost';
 import UserProfile from './components/UserProfile';
+import Chatbot from './components/Chatbot/Chatbot';
 
 function App() {
   return (
     <Router>
+      <Chatbot />
       <Routes>
         {/* Route defining the main layout */}
         <Route path="/" element={<Layout />}>
