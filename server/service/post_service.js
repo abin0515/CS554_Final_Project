@@ -186,3 +186,17 @@ export async function getPostsByPage(page = 1) {
         totalPosts: totalPosts
     }
 } 
+
+/**
+ * Get all posts created by a specific user
+ * @param {string} userId - the ID of the user
+ * @returns {Promise<Array>} - array of post objects
+ */
+export async function getPostsByUserId(userId) {
+    if (!userId || typeof userId !== 'string') {
+        throw new Error('Valid user ID is required');
+    }
+
+    const posts = await postData.getPostsByUserId(userId);
+    return posts;
+}

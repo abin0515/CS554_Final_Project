@@ -1,5 +1,7 @@
 import { ObjectId, Long, Int32 } from 'mongodb';
 import * as mongoCollection from '../config/mongoCollections.js';
+import * as validation from './validation.js';
+
 
 const postsCollection = await mongoCollection.posts();
 
@@ -10,7 +12,8 @@ const postsCollection = await mongoCollection.posts();
  */
 export async function getPostByIdFromDB(postId) {
     // Find the post
-    const post = await postsCollection.findOne({ _id: new ObjectId(postId) });
+    const validPostId = validation.checkId(postId, 'Post ID');
+    const post = await postsCollection.findOne({ _id: new ObjectId(validPostId) });
     
     // If no post is found, throw an error
     if (!post) {
@@ -33,12 +36,17 @@ export async function getPostByIdFromDB(postId) {
  * @returns {Promise<Object>} - the new post
  */
 export async function createPostInDB(title, content, image_urls, user_id, type) {
+    const validTitle = validation.checkString(title, 'Post title');
+    const validContent = validation.checkString(content, 'Post content');
+    const validImageUrls = validation.checkStringArray(image_urls, 'Image URLs');
+    const validUserId = validation.checkString(user_id, 'User ID');
+
     // Create new post object
     const newPost = {
-        title: title || "",
-        content: content || "",
-        image_urls: Array.isArray(image_urls) ? image_urls : [], // Store array of URLs
-        user_id: user_id,
+        title: validTitle || "",
+        content: validContent || "",
+        image_urls: validImageUrls || [],
+        user_id: validUserId,
         latest_reply_id: 0,
         type: type,
         total_like_times: 0,
@@ -66,6 +74,7 @@ export async function createPostInDB(title, content, image_urls, user_id, type) 
  */
 export async function updatePostInDB(postId, updateData) {
     // Build update document dynamically based on provided fields
+    const validPostId = validation.checkId(postId, 'Post ID');
     const updateFields = {};
     if (updateData.title !== undefined) {
         updateFields.title = updateData.title;
@@ -82,7 +91,7 @@ export async function updatePostInDB(postId, updateData) {
     if (Object.keys(updateFields).length === 0) {
         // Maybe return the existing post or throw an error?
         // Returning existing post seems reasonable if nothing changed.
-        return await getPostByIdFromDB(postId); 
+        return await getPostByIdFromDB(validPostId); 
         // Or: throw new Error('No fields provided for update');
     }
 
@@ -91,7 +100,7 @@ export async function updatePostInDB(postId, updateData) {
     
     // Update the post
     const result = await postsCollection.updateOne(
-        { _id: new ObjectId(postId) },
+        { _id: new ObjectId(validPostId) },
         { $set: updateFields } // Use the dynamically built update object
     );
     
@@ -103,7 +112,7 @@ export async function updatePostInDB(postId, updateData) {
     }
     
     // Return the potentially updated post
-    return await getPostByIdFromDB(postId);
+    return await getPostByIdFromDB(validPostId);
 }
 
 /**
@@ -112,7 +121,8 @@ export async function updatePostInDB(postId, updateData) {
  * @returns {Promise<boolean>} - true if successful
  */
 export async function deletePostFromDB(postId) {
-    const deleteInfo = await postsCollection.deleteOne({ _id: new ObjectId(postId) });
+    const validPostId = validation.checkId(postId, 'Post ID');
+    const deleteInfo = await postsCollection.deleteOne({ _id: new ObjectId(validPostId) });
     
     if (deleteInfo.deletedCount === 0) {
         throw new Error('Could not delete post');
@@ -162,10 +172,10 @@ export async function getTotalPostsFromDB() {
 export async function incrementPostReplyCountInDB(postId) {
     // Consider adding validation for postId if not done elsewhere
     // postId = validation.checkId(postId, 'Post ID for increment');
+    const validPostId = validation.checkId(postId, 'Post ID');
     const updateResult = await postsCollection.updateOne(
-        { _id: new ObjectId(postId) },
-        { $inc: { reply_times: 1 }, $set: { update_time: new Date() } }
-    );
+        { _id: new ObjectId(validPostId) },
+        { $inc: { reply_times: 1 }, $set: { update_time: new Date() } });
 
     if (updateResult.matchedCount === 0) {
          // Optionally throw an error or just return false if the post wasn't found
@@ -177,18 +187,25 @@ export async function incrementPostReplyCountInDB(postId) {
 
 export const incrementPostTotalLikeNumInDB = async (postId) => {
  
+    const validPostId = validation.checkId(postId, 'Post ID');
     const updateResult = await postsCollection.updateOne(
-        { _id: new ObjectId(postId) },
+        { _id: new ObjectId(validPostId) },
         { $inc: { total_like_times: 1 }, $set: { update_time: new Date() } }
     );
     return updateResult.acknowledged;
 }   
 
 export const decrementPostTotalLikeNumInDB = async (postId) => {
+    const validPostId = validation.checkId(postId, 'Post ID');
     const updateResult = await postsCollection.findOneAndUpdate (
-        { _id: new ObjectId(postId), total_like_times: { $gt: 0 } },
+        { _id: new ObjectId(validPostId), total_like_times: { $gt: 0 } },
         { $inc: { total_like_times: -1 }, $set: { update_time: new Date() } },
         { returnDocument: 'after' }
     );
     return !!updateResult;
+}
+
+export async function getPostsByUserId(userId) {
+    const posts = await postsCollection.find({ user_id: userId }).toArray();
+    return posts.map((p) => ({ ...p, _id: p._id.toString() }));
 }
