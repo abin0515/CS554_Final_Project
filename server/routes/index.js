@@ -4,6 +4,7 @@ import postRouter from './posts.js'
 import testRouter from './test.js'
 import replyRouter from './replies.js'; 
 import chatRouter from './chat.js';
+
 // import uploadRouter from './uploads.js'; // No longer needed for post creation
 
 const constructorMethod = (app) => {
@@ -12,6 +13,7 @@ const constructorMethod = (app) => {
     app.use('/posts', postRouter);
     app.use('/replies', replyRouter);
     app.use('/chat', chatRouter);
+    app.use('/users', userRouter);
     // app.use('/uploads', uploadRouter); // Remove usage
   
     app.use('*', (req, res) => {

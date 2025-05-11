@@ -12,19 +12,21 @@ function HeaderBar() {
   const authState = useAuth();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const dropdownRef = useRef();
 
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (modalOpen) return;
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [modalOpen]);
 
   return (
     <div className="app-header">
@@ -54,7 +56,7 @@ function HeaderBar() {
               {dropdownOpen && (
                 <div className="auth-dropdown">
                   <GoogleSignIn />
-                  <EmailSignIn />
+                  <EmailSignIn setModalOpen={setModalOpen} />
                 </div>
               )}
             </div>

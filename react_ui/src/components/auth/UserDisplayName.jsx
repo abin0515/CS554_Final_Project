@@ -14,7 +14,7 @@ const DisplayName = ({ userId, anonymity }) => {
             if (mounted) {
                 setDisplayName(name);
             }
-        }).catch(error => {
+        }).catch(() => {
             if (mounted) {
                 setDisplayName('User');
             }

@@ -91,3 +91,16 @@
     text-align: center;
   }
   
+  .signin-forgot-password-button {
+    margin-top: 1rem;
+    background: none;
+    border: none;
+    color: #2563eb;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 1rem;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+  

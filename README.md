@@ -1,5 +1,33 @@
 # CS554 Final Project
 
+## Getting Started
+
+### Frontend `react_ui`
+
+```sh
+npm install
+npm run dev
+```
+
+### Backend `likes_server`
+```sh
+npm install
+npm start
+```
+
+### Backend `server`
+
+```sh
+npm install
+npm start
+```
+### Backend `points_server`
+
+```sh
+npm install
+npm start
+```
+
 ## Service Deployments
 
 ### Database Services
@@ -23,25 +51,7 @@ The connection details for both databases are configured in the `config/settings
 
 
 
-## Getting Started
 
-### Frontend `react_ui`
-
-```sh
-npm install
-npm run dev
-```
-
-### Backend `likes_server`
-```sh
-npm install
-npm start
-```
-
-### Backend `server`
-
-```sh
-npm install
 
 # Optional: if you want to use your own Firebase domain for user authentication, set:
 export FIREBASE_ADMIN_CERT_JSON_PATH="<PATH TO YOUR FIREBASE ADMIN CERT JSON>"

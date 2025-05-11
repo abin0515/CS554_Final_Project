@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { auth as firebaseAuth } from './firebase';
-import { onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { POST_API_BASE_URL } from '../config';
 
 export function useAuth() {
@@ -35,6 +35,10 @@ export function signUpNewAccount(email, password){
     return createUserWithEmailAndPassword(firebaseAuth, email, password)
 }
 
+export function sendResetEmail(email) {
+    return sendPasswordResetEmail(firebaseAuth, email);
+}
+
 const usernameCache = {};
 
 export async function fetchUserDisplayName(uid) {
@@ -42,7 +46,7 @@ export async function fetchUserDisplayName(uid) {
         return usernameCache[uid];
     }
     try {
-        const response = await fetch(`${POST_API_BASE_URL}/displayName/${uid}`);
+        const response = await fetch(`${POST_API_BASE_URL}/users/displayName/${uid}`);
         if (!response.ok) {
             throw new Error(`HTTP error: ${response.status}`);
         }
@@ -74,4 +78,15 @@ export async function fetchWithAuth(url, options = {}) {
         }
     };
     return fetch(url, authOptions);
+}
+
+export async function checkUserEmailExists(email) {
+    const res = await fetch(`${POST_API_BASE_URL}/users/check-user-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+    });
+    if (!res.ok) throw new Error('Failed to check email');
+    const data = await res.json();
+    return data.exists;
 }
