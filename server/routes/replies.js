@@ -3,6 +3,7 @@ import { Router } from "express";
 import repliesService from "../service/replies_service.js"; // Correct import for default export
 import { authenticate } from "../middleware/authenticate.js";
 
+
 const router = Router();
 
 // createReply
@@ -20,6 +21,12 @@ router.post('/create', authenticate, async (req, res) => {
         } = req.body;
 
         const userId = req.user.uid;
+
+        // Validation: Only one reply per user per post/reply
+        const existingReply = await repliesService.findUserReply(post_id, answer_id, userId);
+        if (existingReply) {
+            return res.status(400).json({ error: "You have already replied to this post/reply." });
+        }
 
         if(answer_id !== null){
             // if answer_id is not null, then we need to increment the reply_times of the the answer_id

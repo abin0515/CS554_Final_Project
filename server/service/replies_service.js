@@ -10,7 +10,8 @@ import {
     getSubRepliesByAnswerIdFromDB,
     incrementReplyLikeTimes,
     decrementReplyLikeTimes,
-    incrementReplyTimesInDB
+    incrementReplyTimesInDB,
+    findUserReplyInDB
 } from '../data/replies.js';
 import {
     getPostByIdFromDB,
@@ -180,6 +181,17 @@ export async function incrementReplyTimes(answerId) {
     }
 }
 
+/**
+ * Checks if a user has already replied to a post or reply.
+ * @param {string} post_id - The ID of the post.
+ * @param {string|null} answer_id - The ID of the parent reply (null for direct post reply).
+ * @param {string} user_id - The ID of the user.
+ * @returns {Promise<object|null>} The reply if exists, otherwise null.
+ */
+export async function findUserReply(post_id, answer_id, user_id) {
+    return await findUserReplyInDB(post_id, answer_id, user_id);
+}
+
 export default {
     createReply,
     getReplyById,
@@ -187,5 +199,6 @@ export default {
     incrementReplyTimes,
     
     getSubRepliesByAnswerId,
-    handleLikesTask
+    handleLikesTask,
+    findUserReply
 }; 

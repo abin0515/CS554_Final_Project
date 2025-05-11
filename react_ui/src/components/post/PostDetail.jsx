@@ -680,6 +680,18 @@ function PostDetail() {
   // Filter replies before rendering
   const directReplies = replies.filter(reply => reply.answer_id === null);
 
+  // Check if the current user has already replied to the post (main reply)
+  const hasUserMainReplied = !!replies.find(
+    reply => reply.answer_id === null && reply.user_id === currentUserId
+  );
+
+  // Helper to check if the user has replied to a specific parent reply (for sub-replies)
+  const hasUserSubReplied = (parentReplyId) => {
+    return !!replies.find(
+      reply => reply.answer_id === parentReplyId && reply.user_id === currentUserId
+    );
+  };
+
   return (
     <>
       <div className="post-detail-container">
@@ -733,12 +745,16 @@ function PostDetail() {
       </div>
       <div className="post-detail-replies">
         <h2>Add Your Reply</h2>
-        <ReplyForm
-            onSubmit={handleSubmitMainReply}
-            isLoading={isSubmittingMainReply}
-        />
-         {mainReplyError && <div className="error-message reply-error">{mainReplyError}</div>}
-         {mainReplySuccess && <div className="success-message reply-success">{mainReplySuccess}</div>}
+        {!hasUserMainReplied ? (
+          <ReplyForm
+              onSubmit={handleSubmitMainReply}
+              isLoading={isSubmittingMainReply}
+          />
+        ) : (
+          <div className="info-message">You have already replied to this post.</div>
+        )}
+        {mainReplyError && <div className="error-message reply-error">{mainReplyError}</div>}
+        {mainReplySuccess && <div className="success-message reply-success">{mainReplySuccess}</div>}
       </div>
       <div className="post-detail-replies-list">
         <h3>Direct Replies ({directReplies.length})</h3>
@@ -806,13 +822,19 @@ function PostDetail() {
 
                     {/* Conditionally render the Sub-Reply Form */}
                     {replyingToId === reply._id && (
-                        <ReplyForm
-                            onSubmit={(content, isAnonymous) => handleSubmitSubReply(reply, content, isAnonymous)}
-                            onCancel={() => setReplyingToId(null)}
-                            parentReplyAuthor={reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`}
-                            isLoading={isSubmittingMainReply}
-                            submitButtonText="Submit Reply"
-                        />
+                        replyingToId === reply._id && (
+                          hasUserSubReplied(reply._id) ? (
+                            <div className="info-message">You have already replied to this comment.</div>
+                          ) : (
+                            <ReplyForm
+                                onSubmit={(content, isAnonymous) => handleSubmitSubReply(reply, content, isAnonymous)}
+                                onCancel={() => setReplyingToId(null)}
+                                parentReplyAuthor={reply.anonymity ? 'Anonymous User' : `User ${reply.user_id}`}
+                                isLoading={isSubmittingMainReply}
+                                submitButtonText="Submit Reply"
+                            />
+                          )
+                        )
                     )}
 
                     {/* Conditionally render the Sub-Replies List */}

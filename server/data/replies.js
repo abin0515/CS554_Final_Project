@@ -153,4 +153,15 @@ export const incrementReplyTimesInDB = async (answerId) => {
     );
     return updateResult.acknowledged;
 }
+
+export const findUserReplyInDB = async (post_id, answer_id, user_id) => {
+    const repliesCollection = await mongoCollection.replies();
+    const query = {
+        post_id: post_id,
+        user_id: user_id,
+        answer_id: answer_id === null ? null : answer_id
+    };
+    return await repliesCollection.findOne(query);
+};
+
 // Add other data functions as needed (e.g., deleteReplyFromDB)
