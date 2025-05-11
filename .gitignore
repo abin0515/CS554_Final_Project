@@ -33,4 +33,4 @@ package-lock.json
 .env
 backend/.env
 server/.env
-# Add other specific .env paths if they exist elsewhere
+server/public/uploads/

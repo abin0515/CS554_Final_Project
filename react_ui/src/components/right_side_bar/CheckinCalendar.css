@@ -4,9 +4,9 @@
   padding: 15px;
   border-radius: 8px;
   background-color: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0px 5px rgba(0, 0, 0, 0.3);
   font-family: sans-serif;
-  border: 1px solid #e0e0e0;
+  /* border: 1px solid #e0e0e0; */
   box-sizing: border-box;
   margin-top: 20px; /* Add some space below the leaderboard */
 }
@@ -138,4 +138,4 @@
 }
 .checkin-calendar-table td.other-month.clickable:hover {
     background-color: transparent;
-} 
+}
