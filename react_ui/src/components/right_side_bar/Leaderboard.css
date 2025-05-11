@@ -4,12 +4,13 @@
   /* height: 400px; */ /* Fixed height - can be adjusted or made dynamic */
   max-height: 400px; /* Allow shrinking, but scroll if content exceeds this */
   padding: 15px;
+  margin-top: 15px;
   border-radius: 8px;
   background-color: #f9f9f9;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0px 5px rgba(0, 0, 0, 0.3);
   overflow-y: auto; /* Add scroll if content exceeds height */
   font-family: sans-serif;
-  border: 1px solid #e0e0e0;
+  /* border: 1px solid #e0e0e0; */
   box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
@@ -69,4 +70,4 @@
   text-align: center;
   padding: 20px;
   color: #777;
-} 
+}

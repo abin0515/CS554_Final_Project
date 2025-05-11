@@ -42,8 +42,8 @@ router.post('/submitchcek', authenticate, async (req, res) => {
     try {
         // Call processChat with the moderation system prompt, no tools, and a low temperature
         const rawModerationResponse = await processChat(
-            messagesForModeration, 
-            MODERATION_SYSTEM_PROMPT, 
+            messagesForModeration,
+            MODERATION_SYSTEM_PROMPT,
             [], // No tools for moderation
             0.2 // Low temperature for more deterministic moderation output
         );
@@ -66,10 +66,10 @@ router.post('/submitchcek', authenticate, async (req, res) => {
             }
         }
 
-        res.json({ 
+        res.json({
             isSafe,
             reason,
-            rawAIResponse: rawModerationResponse 
+            rawAIResponse: rawModerationResponse
         });
 
     } catch (error) {
