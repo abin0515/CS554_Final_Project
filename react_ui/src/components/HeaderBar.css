@@ -115,3 +115,20 @@
     color: #7dd3fc;
   }
   
+  .icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f2937;
+    transition: color 0.2s ease;
+  }
+  
+  .icon-button:hover {
+    color: #2563eb;
+  }
+  
+  

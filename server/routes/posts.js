@@ -244,4 +244,20 @@ router.delete('/removePost', authenticate, async (req, res) => {
     }
 });
 
+router.get('/user/:userId', authenticate, async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+      const posts = await postService.getPostsByUserId(userId);
+      res.status(200).json({ success: true, posts });
+  } catch (e) {
+      console.error("Error in /user/:userId route:", e);
+      res.status(500).json({ error: e.message });
+  }
+});
+
 export default router;
