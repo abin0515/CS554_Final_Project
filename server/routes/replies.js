@@ -25,7 +25,7 @@ router.post('/create', authenticate, async (req, res) => {
         // Validation: Only one reply per user per post/reply
         const existingReply = await repliesService.findUserReply(post_id, answer_id, userId);
         if (existingReply) {
-            return res.status(400).json({ error: "You have already replied to this post/reply." });
+            return res.status(400).json({ error: "You have already replied to this reply." });
         }
 
         if(answer_id !== null){
@@ -60,6 +60,29 @@ router.post('/create', authenticate, async (req, res) => {
         }
         // General error
         res.status(500).json({ error: e.message || 'Failed to create reply.' });
+    }
+});
+
+// Edit reply
+router.put('/edit/:replyId', authenticate, async (req, res) => {
+    try {
+        const { replyId } = req.params;
+        const { content } = req.body;
+        const userId = req.user.uid;
+        if (!content || typeof content !== 'string' || !content.trim()) {
+            return res.status(400).json({ error: 'Content is required.' });
+        }
+        const updatedReply = await repliesService.editReply(replyId, userId, content.trim());
+        res.status(200).json({ success: true, reply: updatedReply });
+    } catch (e) {
+        console.error('Error editing reply:', e);
+        if (e.message.includes('Unauthorized')) {
+            return res.status(403).json({ error: e.message });
+        }
+        if (e.message.includes('not found')) {
+            return res.status(404).json({ error: e.message });
+        }
+        res.status(500).json({ error: e.message || 'Failed to edit reply.' });
     }
 });
 

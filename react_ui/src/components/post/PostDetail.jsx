@@ -12,7 +12,7 @@ import './PostDetail.css';
 const ReplyForm = ({
     onSubmit,
 
-    parentReplyAuthor, // Display 'Replying to X'
+    
     isLoading,
     initialContent = '',
     initialAnonymous = false,
@@ -43,7 +43,7 @@ const ReplyForm = ({
         <div className="reply-form-container sub-reply-form-container">
             <textarea
               className="reply-textarea"
-              placeholder={parentReplyAuthor ? `Replying to ${parentReplyAuthor}...` : "Share your thoughts..."}
+              placeholder={"Share your thoughts..."}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               maxLength={500}
@@ -123,6 +123,12 @@ function PostDetail() {
   const [likedStatuses, setLikedStatuses] = useState({}); // { [replyId]: boolean }
   const [likeCounts, setLikeCounts] = useState({}); // { [replyId]: number } - For optimistic updates
   const [isLiking, setIsLiking] = useState({}); // { [replyId]: boolean } - Re-introducing loading state
+
+  // State for editing replies
+  const [editingReplyId, setEditingReplyId] = useState(null);
+  const [editingContent, setEditingContent] = useState("");
+  const [editError, setEditError] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   const handleBack = () => {
     navigate(-1);
@@ -304,6 +310,47 @@ function PostDetail() {
       }
   };
   // --- End Handle Like/Unlike Toggle ---
+
+  // Edit reply handler
+  const handleEditReply = (reply) => {
+    setEditingReplyId(reply._id);
+    setEditingContent(reply.content);
+    setEditError(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReplyId(null);
+    setEditingContent("");
+    setEditError(null);
+  };
+
+  const handleSaveEdit = async (replyId) => {
+    if (!editingContent.trim()) {
+      setEditError("Content cannot be empty.");
+      return;
+    }
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      const response = await fetchWithAuth(`${POST_API_BASE_URL}/replies/edit/${replyId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editingContent.trim() })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to edit reply.');
+      }
+      // Update the reply in the UI
+      setReplies(prev => prev.map(r => r._id === replyId ? { ...r, content: data.reply.content, update_time: data.reply.update_time } : r));
+      setEditingReplyId(null);
+      setEditingContent("");
+    } catch (e) {
+      setEditError(e.message);
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -641,7 +688,7 @@ function PostDetail() {
         }
         setTimeout(() => setMainReplySuccess(null), 3000);
      } catch (e) {
-        setMainReplyError(`Sub-reply failed: ${e.message}`);
+        setMainReplyError(`${e.message}`);
         console.error("Sub-reply submission error:", e);
         setTimeout(() => setMainReplyError(null), 5000);
      } finally {
@@ -787,7 +834,29 @@ function PostDetail() {
                         {new Date(reply.create_time).toLocaleString()}
                         </span>
                     </div>
-                    <div className="reply-content">{reply.content}</div>
+                    {editingReplyId === reply._id ? (
+                      <div className="edit-reply-form">
+                        <textarea
+                          className="edit-reply-textarea"
+                          value={editingContent}
+                          onChange={e => setEditingContent(e.target.value)}
+                          maxLength={500}
+                          rows={3}
+                          disabled={editLoading}
+                        />
+                        <div className="edit-reply-actions">
+                          <button onClick={() => handleSaveEdit(reply._id)} disabled={editLoading}>
+                            {editLoading ? 'Saving...' : 'Save'}
+                          </button>
+                          <button onClick={handleCancelEdit} disabled={editLoading}>Cancel</button>
+                        </div>
+                        {editError && <div className="error-message reply-error">{editError}</div>}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="reply-content">{reply.content}</div>
+                      </>
+                    )}
                     <div className="reply-actions">
                         {/* ---- Like Button ---- */}
                         <button
@@ -818,6 +887,11 @@ function PostDetail() {
                         >
                             Reply
                         </button>
+                        {currentUserId === reply.user_id && (
+                          <button className="reply-action-button edit-reply-button" onClick={() => handleEditReply(reply)}>
+                            Edit
+                          </button>
+                        )}
                     </div>
 
                     {/* Conditionally render the Sub-Reply Form */}

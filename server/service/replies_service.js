@@ -11,7 +11,8 @@ import {
     incrementReplyLikeTimes,
     decrementReplyLikeTimes,
     incrementReplyTimesInDB,
-    findUserReplyInDB
+    findUserReplyInDB,
+    updateReplyContentInDB
 } from '../data/replies.js';
 import {
     getPostByIdFromDB,
@@ -192,6 +193,19 @@ export async function findUserReply(post_id, answer_id, user_id) {
     return await findUserReplyInDB(post_id, answer_id, user_id);
 }
 
+/**
+ * Edits a reply's content if the user is the author.
+ * @param {string} replyId
+ * @param {string} userId
+ * @param {string} newContent
+ */
+export async function editReply(replyId, userId, newContent) {
+    const reply = await getReplyByIdFromDB(replyId);
+    if (!reply) throw new Error('Reply not found.');
+    if (reply.user_id !== userId) throw new Error('Unauthorized: You can only edit your own reply.');
+    return await updateReplyContentInDB(replyId, newContent);
+}
+
 export default {
     createReply,
     getReplyById,
@@ -200,5 +214,6 @@ export default {
     
     getSubRepliesByAnswerId,
     handleLikesTask,
-    findUserReply
+    findUserReply,
+    editReply
 }; 

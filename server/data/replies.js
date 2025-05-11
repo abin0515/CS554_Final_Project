@@ -164,4 +164,15 @@ export const findUserReplyInDB = async (post_id, answer_id, user_id) => {
     return await repliesCollection.findOne(query);
 };
 
+export const updateReplyContentInDB = async (replyId, newContent) => {
+    const repliesCollection = await mongoCollection.replies();
+    const result = await repliesCollection.findOneAndUpdate(
+        { _id: new ObjectId(replyId) },
+        { $set: { content: newContent, update_time: new Date() } },
+        { returnDocument: 'after', returnOriginal: false }
+    );
+    if (!result) throw new Error('Reply not found or could not update.');
+    return result;
+};
+
 // Add other data functions as needed (e.g., deleteReplyFromDB)
