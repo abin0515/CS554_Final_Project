@@ -112,7 +112,7 @@ export async function getPostsByPageFromDB(page) {
 
     const posts = await postsCollection
         .find({})
-        .sort({ create_time: -1 }) // 👈 Newest first
+        .sort({ create_time: -1 }) 
         .skip(skip)
         .limit(limit)
         .toArray();
@@ -181,7 +181,7 @@ export const decrementPostTotalLikeNumInDB = async (postId) => {
 export async function getPostsByUserId(userId) {
     const posts = await postsCollection
         .find({ user_id: userId })
-        .sort({ create_time: -1 }) // 👈 Newest first
+        .sort({ create_time: -1 })
         .toArray();
 
     return posts.map((p) => ({

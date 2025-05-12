@@ -3,7 +3,45 @@ import { signUpNewAccount } from "../../lib/Auth";
 import "./SignUpPanel.css";
 
 function SignUpPanel(props) {
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
+
+  const isValidEmail = (email) =>/^[a-zA-Z0-9]+([._]?[a-zA-Z0-9]+)*@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/.test(email.trim());
+
+  const isValidDisplayName = (name) =>
+    /^[a-zA-Z\s]{2,30}$/.test(name.trim());
+
+  const isStrongPassword = (password) =>
+    typeof password === "string" && password.length >= 6;
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    const form = document.getElementById("signUpForm");
+    const fd = new FormData(form);
+    const email = fd.get("email");
+    const password = fd.get("password");
+    const displayName = fd.get("displayName");
+
+    // Client-side validation
+    if (!displayName || !isValidDisplayName(displayName)) {
+      return setError("Please enter a valid name (letters only, 2–30 characters).");
+    }
+
+    if (!email || !isValidEmail(email)) {
+      return setError("Please enter a valid email address.");
+    }
+
+    if (!password || !isStrongPassword(password)) {
+      return setError("Password must be at least 6 characters long.");
+    }
+
+    try {
+      await signUpNewAccount(email, password, displayName);
+    } catch (e) {
+      setError(e.message || "Registration failed. Try again.");
+    }
+  };
 
   return (
     <div className="overlay">
@@ -21,27 +59,11 @@ function SignUpPanel(props) {
           <label htmlFor="password">Password</label>
           <input name="password" type="password" placeholder="Enter your password" required />
 
-          <button
-            className="submit-button"
-            onClick={async (e) => {
-              e.preventDefault();
-              const form = document.getElementById("signUpForm");
-              const fd = new FormData(form);
-              const email = fd.get("email");
-              const password = fd.get("password");
-              const displayName = fd.get("displayName");
-
-              try {
-                await signUpNewAccount(email, password, displayName);
-              } catch (e) {
-                setError(e);
-              }
-            }}
-          >
+          <button className="submit-button" onClick={handleRegister}>
             Register
           </button>
 
-          {error && <p className="error">{error.message}</p>}
+          {error && <p className="error">{error}</p>}
         </form>
       </div>
     </div>

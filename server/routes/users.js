@@ -1,13 +1,20 @@
+//validations added
+
 import { Router } from "express";
 import * as userData from "../data/users.js";
 import { getUserDisplayName, authenticate } from "../middleware/authenticate.js";
 import admin from 'firebase-admin';
+import { isValidEmail, isValidUid, isNonEmptyString } from "./validator.js";
 
 const router = Router();
 
 // GET /displayName/:uid — used by frontend to get display name quickly
 router.get('/displayName/:uid', async (req, res) => {
   const { uid } = req.params;
+  if (!isValidUid(uid)) {
+    return res.status(400).json({ success: false, error: 'Invalid user ID format' });
+  }
+
   try {
     const displayName = await getUserDisplayName(uid);
     res.status(200).json({ success: true, displayName });
@@ -20,6 +27,10 @@ router.get('/displayName/:uid', async (req, res) => {
 // GET /profile/:uid — get public user profile info
 router.get('/profile/:uid', async (req, res) => {
   const { uid } = req.params;
+  if (!isValidUid(uid)) {
+    return res.status(400).json({ success: false, error: 'Invalid user ID format' });
+  }
+
   try {
     const user = await userData.getUserByUid(uid);
     res.status(200).json({
@@ -40,9 +51,10 @@ router.get('/profile/:uid', async (req, res) => {
 // POST /check-user-email — check if email is registered in Firebase
 router.post('/check-user-email', async (req, res) => {
   const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ exists: false, error: 'Email is required.' });
+  if (!isNonEmptyString(email) || !isValidEmail(email)) {
+    return res.status(400).json({ exists: false, error: 'Valid email is required.' });
   }
+
   try {
     await admin.auth().getUserByEmail(email);
     res.json({ exists: true });
@@ -60,6 +72,14 @@ router.post('/sync', authenticate, async (req, res) => {
   try {
     const firebaseUser = req.user;
 
+    if (
+      !isValidUid(firebaseUser.uid) ||
+      !isValidEmail(firebaseUser.email || '') ||
+      !isNonEmptyString(firebaseUser.displayName || firebaseUser.name || '')
+    ) {
+      return res.status(400).json({ success: false, error: 'Invalid user data from Firebase' });
+    }
+
     const userPayload = {
       uid: firebaseUser.uid,
       email: firebaseUser.email || '',
@@ -67,7 +87,6 @@ router.post('/sync', authenticate, async (req, res) => {
     };
 
     await userData.upsertUser(userPayload);
-
     res.json({ success: true });
   } catch (error) {
     console.error('Error syncing user:', error);
