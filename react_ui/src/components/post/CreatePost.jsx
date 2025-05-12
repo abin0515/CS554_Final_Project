@@ -58,6 +58,38 @@ function CreatePost() {
     setImagePreviewUrls(prev => prev.filter((_, i) => i !== index));
   }, [imagePreviewUrls]);
 
+    // Handler for drag-over event to allow dropping
+    const handleDragOver = useCallback((event) => {
+      event.preventDefault();
+    }, []);
+
+    // Handler for drop event to process dropped files
+    const handleDrop = useCallback((event) => {
+      event.preventDefault();
+      setError(null);
+      const files = event.dataTransfer.files;
+      if (!files) return;
+      const filesToAdd = Array.from(files);
+
+      if (imageFiles.length + filesToAdd.length > MAX_IMAGES) {
+        setError(`You can only upload up to ${MAX_IMAGES} images.`);
+        return;
+      }
+
+      const newFiles = [];
+      const newPreviews = [];
+      filesToAdd.forEach(file => {
+        // Ensure only image files are dropped
+        if (file.type.startsWith('image/')) {
+          newFiles.push(file);
+          newPreviews.push(URL.createObjectURL(file));
+        }
+      });
+
+      setImageFiles(prev => [...prev, ...newFiles]);
+      setImagePreviewUrls(prev => [...prev, ...newPreviews]);
+    }, [imageFiles]);
+
   useEffect(() => {
     return () => {
       imagePreviewUrls.forEach(URL.revokeObjectURL);
@@ -95,7 +127,7 @@ function CreatePost() {
         // Handle non-2xx responses from moderation service as a failure to moderate
         throw new Error(moderationResult.error || moderationResult.details || `Moderation check failed with status: ${moderationResponse.status}`);
       }
-      
+
       if (!moderationResult.isSafe) {
         alert(`Post cannot be created: Please be polite -- MotherDucker.`);
         setLoading(false);
@@ -156,11 +188,16 @@ function CreatePost() {
       </div>
 
       <div className="image-upload-wrapper">
-        <div className="image-upload-section">
-          {imageFiles.length < MAX_IMAGES && (
+      <div
+        className="image-upload-section"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        style={{ border: '2px dashed #93c5fd', padding: '1rem', borderRadius: '0.375rem', textAlign: 'center' }}
+      >
+                  {imageFiles.length < MAX_IMAGES && (
             <>
               <label htmlFor="image-upload" className="image-upload-label">
-                Add Image ({imageFiles.length}/{MAX_IMAGES})
+                Click or Drop to Add Image ({imageFiles.length}/{MAX_IMAGES})
               </label>
               <input
                 id="image-upload"

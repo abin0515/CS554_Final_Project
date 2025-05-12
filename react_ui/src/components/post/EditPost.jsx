@@ -61,34 +61,64 @@ function EditPost() {
     fetchPostData();
   }, [postId]);
 
+  // Handler for drag-over event to allow dropping
+  const handleDragOver = useCallback((event) => {
+    event.preventDefault();
+  }, []);
+
+  // Handler for drop event to process dropped files
+  const handleDrop = useCallback((event) => {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    if (!files) return;
+    const filesToAdd = Array.from(files);
+
+    if (imageFiles.length + filesToAdd.length > MAX_IMAGES) {
+      setError(`You can only upload up to ${MAX_IMAGES} images.`);
+      return;
+    }
+
+    const newFiles = [];
+    const newPreviews = [];
+    filesToAdd.forEach(file => {
+      // Ensure only image files are dropped
+      if (file.type.startsWith('image/')) {
+        newFiles.push(file);
+        newPreviews.push(URL.createObjectURL(file));
+      }
+    });
+
+    setImageFiles(prev => [...prev, ...newFiles]);
+    setImagePreviewUrls(prev => [...prev, ...newPreviews]);
+  }, [imageFiles]);
   // --- Image Handling ---
   const handleImageChange = (event) => {
-     // Similar to CreatePost, but check against total images (existing + new)
-     const files = event.target.files;
-     if (!files) return;
+    // Similar to CreatePost, but check against total images (existing + new)
+    const files = event.target.files;
+    if (!files) return;
 
-     setSubmitError(null);
-     const currentTotalImages = existingImageUrls.length + imageFiles.length;
-     const filesToAdd = Array.from(files);
+    setSubmitError(null);
+    const currentTotalImages = existingImageUrls.length + imageFiles.length;
+    const filesToAdd = Array.from(files);
 
-     if (currentTotalImages + filesToAdd.length > MAX_IMAGES) {
-       setSubmitError(`You can only have a maximum of ${MAX_IMAGES} images in total.`);
-       event.target.value = '';
-       return;
-     }
+    if (currentTotalImages + filesToAdd.length > MAX_IMAGES) {
+      setSubmitError(`You can only have a maximum of ${MAX_IMAGES} images in total.`);
+      event.target.value = '';
+      return;
+    }
 
-     const newFiles = [];
-     const newPreviewUrls = [];
+    const newFiles = [];
+    const newPreviewUrls = [];
 
-     filesToAdd.forEach(file => {
-       newFiles.push(file);
-       newPreviewUrls.push(URL.createObjectURL(file)); // Create blob URLs for new files
-     });
+    filesToAdd.forEach(file => {
+      newFiles.push(file);
+      newPreviewUrls.push(URL.createObjectURL(file)); // Create blob URLs for new files
+    });
 
-     setImageFiles(prevFiles => [...prevFiles, ...newFiles]);
-     // Add new blob URLs to the existing full URLs for combined preview
-     setImagePreviewUrls(prevUrls => [...prevUrls, ...newPreviewUrls]);
-     event.target.value = '';
+    setImageFiles(prevFiles => [...prevFiles, ...newFiles]);
+    // Add new blob URLs to the existing full URLs for combined preview
+    setImagePreviewUrls(prevUrls => [...prevUrls, ...newPreviewUrls]);
+    event.target.value = '';
   };
 
   const handleRemoveImage = useCallback((indexToRemove, isExisting) => {
@@ -115,7 +145,7 @@ function EditPost() {
       imagePreviewUrls.forEach(url => {
         // Only revoke blob URLs created by createObjectURL
         if (url.startsWith('blob:')) {
-            URL.revokeObjectURL(url);
+          URL.revokeObjectURL(url);
         }
       });
     };
@@ -152,8 +182,8 @@ function EditPost() {
 
     // Append NEWLY added files
     imageFiles.forEach((file) => {
-        // Use 'postImages' to match multer field name in backend route
-        formData.append('postImages', file);
+      // Use 'postImages' to match multer field name in backend route
+      formData.append('postImages', file);
     });
 
     try {
@@ -190,20 +220,20 @@ function EditPost() {
     <form className="edit-post-container" onSubmit={handleSubmit}>
       {/* Header (reuse styles or use edit-post-* classes) */}
       <div className="create-post-header">
-         <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title"
-            className="create-post-title-input"
-            disabled={loading}
-          />
-         <div className="create-post-actions-top">
-           <button type="button" onClick={handleCancel} className="cancel-button" disabled={loading}>Cancel</button>
-           <button type="submit" className="post-button" disabled={loading}>
-             {loading ? 'Saving...' : 'Save Changes'}
-           </button>
-         </div>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Title"
+          className="create-post-title-input"
+          disabled={loading}
+        />
+        <div className="create-post-actions-top">
+          <button type="button" onClick={handleCancel} className="cancel-button" disabled={loading}>Cancel</button>
+          <button type="submit" className="post-button" disabled={loading}>
+            {loading ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
 
       {/* Topic (reuse) */}
@@ -212,10 +242,14 @@ function EditPost() {
       </div>
 
       {/* Image Upload (reuse styles or use edit-post-* classes) */}
-      <div className="image-upload-section">
+      <div className="image-upload-section"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        style={{ border: '2px dashed #93c5fd', padding: '1rem', borderRadius: '0.375rem', textAlign: 'center' }}
+      >
         {imagePreviewUrls.length < MAX_IMAGES && (
           <label htmlFor="image-upload" className="image-upload-label">
-             Add Image ({imagePreviewUrls.length}/{MAX_IMAGES})
+            Click or Drop to Add Image ({imagePreviewUrls.length}/{MAX_IMAGES})
           </label>
         )}
         <input
@@ -262,7 +296,7 @@ function EditPost() {
 
       {/* Footer (reuse) */}
       <div className="create-post-footer">
-         {/* Optionally show saved status or draft info */}
+        {/* Optionally show saved status or draft info */}
       </div>
     </form>
   );
