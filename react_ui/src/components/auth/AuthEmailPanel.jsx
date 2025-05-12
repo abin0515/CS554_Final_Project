@@ -5,7 +5,7 @@ import ForgotPasswordPanel from "./ForgotPasswordPanel";
 import "./AuthEmailPanel.css";
 
 function AuthEmailPanel(props) {
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(null);
   const [showForgot, setShowForgot] = useState(false);
 
   if (showForgot) {
@@ -15,21 +15,46 @@ function AuthEmailPanel(props) {
     );
   }
 
+  const validateEmail = (email) => {
+    const re = /^[a-zA-Z0-9]+([._]?[a-zA-Z0-9]+)*@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+    return typeof email === 'string' && re.test(email.trim());
+  };
+  
+
+  const validatePassword = (password) => {
+    return typeof password === 'string' && password.length >= 6;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    const form = document.getElementById("signInForm");
+    const fd = new FormData(form);
+    const email = fd.get("email").trim();
+    const password = fd.get("password");
+
+    // Input validation
+    if (!email || !validateEmail(email)) {
+      setError({ message: "Please enter a valid email address." });
+      return;
+    }
+    if (!validatePassword(password)) {
+      setError({ message: "Password must be at least 6 characters long." });
+      return;
+    }
+
+    try {
+      await authEmail(email, password);
+    } catch (e) {
+      setError({ message: e.message || "Authentication failed." });
+    }
+  };
+
   const modal = (
     <div className="signin-overlay">
-      <div
-        className="signin-panel-container"
-        style={{ pointerEvents: "auto", border: "3px solid red", zIndex: 10000 }}
-        onClick={(e) => { console.log('Panel click'); e.stopPropagation(); }}
-      >
-        <button className="signin-close-button" onClick={() => props.setHidden(true)}>
-          ×
-        </button>
-        <form
-          className="signin-form"
-          id="signInForm"
-          onClick={() => { console.log('Form click'); }}
-        >
+      <div className="signin-panel-container" style={{ pointerEvents: "auto", zIndex: 10000 }} onClick={(e) => e.stopPropagation()}>
+        <button className="signin-close-button" onClick={() => props.setHidden(true)}>×</button>
+        <form className="signin-form" id="signInForm">
           <h2 className="signin-panel-title">Sign In With Email</h2>
 
           <label htmlFor="email">Email</label>
@@ -38,23 +63,7 @@ function AuthEmailPanel(props) {
           <label htmlFor="password">Password</label>
           <input name="password" type="password" placeholder="Enter your password" required />
 
-          <button
-            className="signin-submit-button"
-            onClick={async (e) => {
-              e.preventDefault();
-              const form = document.getElementById("signInForm");
-              const fd = new FormData(form);
-
-              const email = fd.get("email");
-              const password = fd.get("password");
-
-              try {
-                await authEmail(email, password);
-              } catch (e) {
-                setError(e);
-              }
-            }}
-          >
+          <button className="signin-submit-button" onClick={handleSubmit}>
             Sign In
           </button>
 
@@ -72,7 +81,7 @@ function AuthEmailPanel(props) {
     </div>
   );
 
-  return createPortal(modal, document.body); 
+  return createPortal(modal, document.body);
 }
 
 export default AuthEmailPanel;

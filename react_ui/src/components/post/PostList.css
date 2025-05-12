@@ -92,7 +92,7 @@
   align-items: center;
   margin-top: 20px;
   padding: 10px;
-  gap: 10px; /* Adds space between buttons and text */
+  gap: 10px;
 }
 
 .pagination-controls button {
@@ -119,4 +119,20 @@
 .pagination-controls span {
   font-size: 0.9em;
   color: #555;
+}
+
+.post-user {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.post-user-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.post-user-link:hover {
+  text-decoration: underline;
 }

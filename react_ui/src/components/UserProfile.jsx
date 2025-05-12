@@ -1,44 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '../lib/Auth';
 import { POST_API_BASE_URL } from '../config';
 import './UserProfile.css';
 
 function UserProfile() {
   const { user } = useAuth();
-  const [userPosts, setUserPosts] = useState([]);
-  const [loadingPosts, setLoadingPosts] = useState(true);
+  const { userId: routeUserId } = useParams();
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const isSelfProfile = !routeUserId || (user && routeUserId === user.uid);
+  const targetUserId = isSelfProfile ? user?.uid : routeUserId;
+
   useEffect(() => {
-    const fetchUserPosts = async () => {
-      if (!user) return;
-      setLoadingPosts(true);
+    const fetchUserProfile = async () => {
+      if (!targetUserId || (!isSelfProfile && !user)) return;
+
+      setLoading(true);
       try {
-        const token = await user.getIdToken();
-        const response = await fetch(`${POST_API_BASE_URL}/posts/user/${user.uid}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+        const displayRes = await fetch(`${POST_API_BASE_URL}/users/displayName/${targetUserId}`);
+        const displayData = await displayRes.json();
+
+        setUserProfile({
+          uid: targetUserId,
+          displayName: displayData.displayName || 'Anonymous',
+          email: isSelfProfile ? user.email : null,
+          photoURL: isSelfProfile ? user.photoURL : null
         });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch posts: ${response.status}`);
-        }
-        const data = await response.json();
-        setUserPosts(data.posts || []);
       } catch (err) {
+        console.error(err);
         setError(err.message);
       } finally {
-        setLoadingPosts(false);
+        setLoading(false);
       }
     };
 
-    fetchUserPosts();
-  }, [user]);
+    fetchUserProfile();
+  }, [user, routeUserId]);
 
-  if (!user) {
+  if (!user && isSelfProfile) {
     return <p className="user-profile-message">You must be signed in to view your profile.</p>;
   }
+
+  if (loading) return <p className="user-profile-message">Loading profile...</p>;
+  if (error) return <p className="error-message">Error: {error}</p>;
 
   return (
     <div className="user-profile-wrapper">
@@ -46,48 +53,21 @@ function UserProfile() {
       <div className="user-profile-content">
         <div className="profile-info">
           <img
-            src={user.photoURL || '/default-avatar.png'}
+            src={userProfile.photoURL || '/default-avatar.png'}
             alt="Profile"
             className="profile-picture"
           />
           <div className="profile-details">
-            <h2>{user.displayName || 'Anonymous'}</h2>
-            <p className="profile-email">{user.email}</p>
+            <h2>{userProfile.displayName}</h2>
+            {isSelfProfile && <p className="profile-email">{userProfile.email}</p>}
             <p className="profile-role">Community Member at MotherDuckers</p>
-          </div>
-        </div>
 
-        <div className="user-stats-section">
-          <div className="stat-box chat">
-            <p className="stat-label">Chat</p>
-            <button className="chat-button">Open Chat</button>
+            {!isSelfProfile && (
+              <button className="follow-button" onClick={() => alert('Follow feature coming soon!')}>
+                Follow
+              </button>
+            )}
           </div>
-          <div className="stat-box score">
-            <p className="stat-label">Reputation</p>
-            <p className="stat-value">4.5 ★</p>
-          </div>
-        </div>
-
-        <div className="user-posts-section">
-          <h3>Your Posts</h3>
-          {loadingPosts ? (
-            <p>Loading posts...</p>
-          ) : error ? (
-            <p className="error-message">Error: {error}</p>
-          ) : userPosts.length === 0 ? (
-            <p>You haven't posted anything yet.</p>
-          ) : (
-            <ul className="user-post-list">
-              {userPosts.map((post) => (
-                <li key={post._id} className="user-post-item">
-                  <Link to={`/posts/detail?postId=${post._id}`} className="post-title-link">
-                    <strong>{post.title}</strong>
-                  </Link>
-                  <p>{post.content}</p>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       </div>
     </div>

@@ -36,7 +36,8 @@ function App() {
           <Route path="posts/edit" element={<EditPost />} />
 
           {/* Add route for profile page */}
-          <Route path="profile" element={<UserProfile />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/profile/:userId" element={<UserProfile />} />
           
           {/* Add other routes that should use the Layout here */}
           {/* Example: <Route path="profile" element={<UserProfile />} /> */}
