@@ -1,52 +1,42 @@
-import { ObjectId, Long, Int32 } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import * as mongoCollection from '../config/mongoCollections.js';
 import * as validation from './validation.js';
-
+import admin from 'firebase-admin';
 
 const postsCollection = await mongoCollection.posts();
 
 /**
  * Get a post by ID directly from the database
- * @param {string} postId - the ID of the post to retrieve
- * @returns {Promise<Object>} - the post object
  */
 export async function getPostByIdFromDB(postId) {
-    // Find the post
     const validPostId = validation.checkId(postId, 'Post ID');
     const post = await postsCollection.findOne({ _id: new ObjectId(validPostId) });
-    
-    // If no post is found, throw an error
+
     if (!post) {
         throw new Error('Post not found');
     }
-    
-    // Convert ObjectId to string for the _id field
+
     post._id = post._id.toString();
-    
     return post;
 }
 
 /**
  * Create a new post in the database
- * @param {string} title - the title of the post
- * @param {string} content - the content of the post
- * @param {string[]} image_urls - Array of image url strings
- * @param {string} user_id - the user id of the post
- * @param {number} type - the type of the post
- * @returns {Promise<Object>} - the new post
  */
 export async function createPostInDB(title, content, image_urls, user_id, type) {
     const validTitle = validation.checkString(title, 'Post title');
     const validContent = validation.checkString(content, 'Post content');
     const validImageUrls = validation.checkStringArray(image_urls, 'Image URLs');
     const validUserId = validation.checkString(user_id, 'User ID');
+    const userRecord = await admin.auth().getUser(validUserId);
+    const userDisplayName = userRecord.displayName || '';
 
-    // Create new post object
     const newPost = {
-        title: validTitle || "",
-        content: validContent || "",
-        image_urls: validImageUrls || [],
+        title: validTitle,
+        content: validContent,
+        image_urls: validImageUrls,
         user_id: validUserId,
+        user_display_name: userDisplayName,
         latest_reply_id: 0,
         type: type,
         total_like_times: 0,
@@ -54,28 +44,23 @@ export async function createPostInDB(title, content, image_urls, user_id, type) 
         create_time: new Date(),
         update_time: new Date()
     };
-    
-    // Insert post to database
+
     const insertInfo = await postsCollection.insertOne(newPost);
     if (!insertInfo.acknowledged || !insertInfo.insertedId) {
         throw new Error('Could not create post');
     }
-    
-    // Return the new post with string ID
+
     newPost._id = insertInfo.insertedId.toString();
     return newPost;
 }
 
 /**
  * Update a post in the database
- * @param {string} postId - the ID of the post to update
- * @param {Object} updateData - object containing fields to update (e.g., title, content, image_urls)
- * @returns {Promise<Object>} - the updated post
  */
 export async function updatePostInDB(postId, updateData) {
-    // Build update document dynamically based on provided fields
     const validPostId = validation.checkId(postId, 'Post ID');
     const updateFields = {};
+
     if (updateData.title !== undefined) {
         updateFields.title = updateData.title;
     }
@@ -83,58 +68,43 @@ export async function updatePostInDB(postId, updateData) {
         updateFields.content = updateData.content;
     }
     if (updateData.image_urls !== undefined) {
-        // Ensure it's an array before saving
         updateFields.image_urls = Array.isArray(updateData.image_urls) ? updateData.image_urls : [];
     }
 
-    // Only proceed if there are fields to update
     if (Object.keys(updateFields).length === 0) {
-        // Maybe return the existing post or throw an error?
-        // Returning existing post seems reasonable if nothing changed.
-        return await getPostByIdFromDB(validPostId); 
-        // Or: throw new Error('No fields provided for update');
+        return await getPostByIdFromDB(validPostId);
     }
 
-    // Add update_time
     updateFields.update_time = new Date();
-    
-    // Update the post
+
     const result = await postsCollection.updateOne(
         { _id: new ObjectId(validPostId) },
-        { $set: updateFields } // Use the dynamically built update object
+        { $set: updateFields }
     );
-    
-    // Check if *anything* was modified or if the document matched
-    // If the data sent is identical to existing data, modifiedCount will be 0 
-    // but matchedCount will be 1. This isn't necessarily an error.
+
     if (result.matchedCount === 0) {
         throw new Error('Could not find post to update');
     }
-    
-    // Return the potentially updated post
+
     return await getPostByIdFromDB(validPostId);
 }
 
 /**
  * Delete a post from the database
- * @param {string} postId - the ID of the post to delete
- * @returns {Promise<boolean>} - true if successful
  */
 export async function deletePostFromDB(postId) {
     const validPostId = validation.checkId(postId, 'Post ID');
     const deleteInfo = await postsCollection.deleteOne({ _id: new ObjectId(validPostId) });
-    
+
     if (deleteInfo.deletedCount === 0) {
         throw new Error('Could not delete post');
     }
-    
+
     return true;
 }
 
 /**
- * Get posts by page from the database
- * @param {number} page - the page number (1-based)
- * @returns {Promise<Array>} - array of post objects
+ * Get posts by page, sorted by newest first
  */
 export async function getPostsByPageFromDB(page) {
     const skip = (page - 1) * 10;
@@ -142,13 +112,12 @@ export async function getPostsByPageFromDB(page) {
 
     const posts = await postsCollection
         .find({})
+        .sort({ create_time: -1 }) // 👈 Newest first
         .skip(skip)
         .limit(limit)
         .toArray();
 
-    if (!posts || posts.length === 0) {
-        return [];
-    }
+    if (!posts || posts.length === 0) return [];
 
     return posts.map((p) => ({
         ...p,
@@ -158,54 +127,65 @@ export async function getPostsByPageFromDB(page) {
 
 /**
  * Get total posts from the database
- * @returns {Promise<number>} - total number of posts
  */
 export async function getTotalPostsFromDB() {
     return await postsCollection.countDocuments();
 }
 
 /**
- * Increments the reply_times count for a specific post.
- * @param {string} postId - The ID of the post to update.
- * @returns {Promise<boolean>} True if the update was acknowledged.
+ * Increment the reply count for a post
  */
 export async function incrementPostReplyCountInDB(postId) {
-    // Consider adding validation for postId if not done elsewhere
-    // postId = validation.checkId(postId, 'Post ID for increment');
     const validPostId = validation.checkId(postId, 'Post ID');
     const updateResult = await postsCollection.updateOne(
         { _id: new ObjectId(validPostId) },
-        { $inc: { reply_times: 1 }, $set: { update_time: new Date() } });
+        { $inc: { reply_times: 1 }, $set: { update_time: new Date() } }
+    );
 
     if (updateResult.matchedCount === 0) {
-         // Optionally throw an error or just return false if the post wasn't found
-         console.warn(`Attempted to increment reply count for non-existent post ID: ${postId}`);
-         return false;
+        console.warn(`Attempted to increment reply count for non-existent post ID: ${postId}`);
+        return false;
     }
+
     return updateResult.acknowledged;
 }
 
+/**
+ * Increment likes
+ */
 export const incrementPostTotalLikeNumInDB = async (postId) => {
- 
     const validPostId = validation.checkId(postId, 'Post ID');
     const updateResult = await postsCollection.updateOne(
         { _id: new ObjectId(validPostId) },
         { $inc: { total_like_times: 1 }, $set: { update_time: new Date() } }
     );
     return updateResult.acknowledged;
-}   
+};
 
+/**
+ * Decrement likes
+ */
 export const decrementPostTotalLikeNumInDB = async (postId) => {
     const validPostId = validation.checkId(postId, 'Post ID');
-    const updateResult = await postsCollection.findOneAndUpdate (
+    const updateResult = await postsCollection.findOneAndUpdate(
         { _id: new ObjectId(validPostId), total_like_times: { $gt: 0 } },
         { $inc: { total_like_times: -1 }, $set: { update_time: new Date() } },
         { returnDocument: 'after' }
     );
     return !!updateResult;
-}
+};
 
+/**
+ * Get posts by user ID, sorted by newest first
+ */
 export async function getPostsByUserId(userId) {
-    const posts = await postsCollection.find({ user_id: userId }).toArray();
-    return posts.map((p) => ({ ...p, _id: p._id.toString() }));
+    const posts = await postsCollection
+        .find({ user_id: userId })
+        .sort({ create_time: -1 }) // 👈 Newest first
+        .toArray();
+
+    return posts.map((p) => ({
+        ...p,
+        _id: p._id.toString()
+    }));
 }

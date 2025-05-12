@@ -165,3 +165,19 @@
     margin: 0;
   }
   
+  .follow-button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #f59e0b;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .follow-button:hover {
+    background-color: #b17307;
+  }
+  

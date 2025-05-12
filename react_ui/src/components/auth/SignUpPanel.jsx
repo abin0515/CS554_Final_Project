@@ -12,11 +12,14 @@ function SignUpPanel(props) {
         <form className="email-panel-form" id="signUpForm">
           <h2 className="panel-title">Create Account</h2>
 
+          <label htmlFor="displayName">Display Name</label>
+          <input name="displayName" type="text" placeholder="Your name" required />
+
           <label htmlFor="email">Email</label>
-          <input name="email" type="email" placeholder="Enter your email" />
+          <input name="email" type="email" placeholder="Enter your email" required />
 
           <label htmlFor="password">Password</label>
-          <input name="password" type="password" placeholder="Enter your password" />
+          <input name="password" type="password" placeholder="Enter your password" required />
 
           <button
             className="submit-button"
@@ -26,9 +29,10 @@ function SignUpPanel(props) {
               const fd = new FormData(form);
               const email = fd.get("email");
               const password = fd.get("password");
+              const displayName = fd.get("displayName");
 
               try {
-                await signUpNewAccount(email, password);
+                await signUpNewAccount(email, password, displayName);
               } catch (e) {
                 setError(e);
               }

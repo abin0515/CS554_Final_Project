@@ -27,7 +27,6 @@ function PostList() {
         if (data.success) {
           setPosts(data.posts);
           setTotalPages(Math.ceil((data.totalPosts || 0) / 10));
-          console.log(data.totalPosts);
         } else {
           throw new Error(data.error || 'Failed to fetch posts from API');
         }
@@ -53,6 +52,17 @@ function PostList() {
             <Link to={`/posts/detail?postId=${post._id}`} className="post-title-link">
               <h3 className="post-title">{post.title}</h3>
             </Link>
+
+            {/* User link */}
+            {post.user_id && (
+              <p className="post-user">
+                Posted by{' '}
+                <Link to={`/profile/${post.user_id}`} className="post-user-link">
+                  {post.user_display_name || post.user_email || 'Anonymous'}
+                </Link>
+              </p>
+            )}
+
             <p className="post-snippet">{post.content}</p>
             <div className="post-meta">
               <span><FavoriteIcon fontSize="small" /> {post.total_like_times}</span>
