@@ -57,9 +57,13 @@ function PostList() {
             {post.user_id && (
               <p className="post-user">
                 Posted by{' '}
-                <Link to={`/profile/${post.user_id}`} className="post-user-link">
-                  {post.user_display_name || post.user_email || 'Anonymous'}
-                </Link>
+                {post.user_display_name || post.user_email ? (
+                  <Link to={`/profile/${post.user_id}`} className="post-user-link">
+                    {post.user_display_name || post.user_email}
+                  </Link>
+                ) : (
+                  'Anonymous'
+                )}
               </p>
             )}
 
