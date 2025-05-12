@@ -57,7 +57,7 @@
   background-color: #fffefc;
   border: 1px solid #fcd34d;
   border-radius: 0.5rem;
-  padding: 1rem;
+  /* padding: 1rem; */
   font-size: 0.95rem;
   color: #374151;
   align-self: flex-start;
