@@ -126,6 +126,92 @@ export async function getPostsByPageFromDB(page) {
 }
 
 /**
+ * Get the Best posts, sorted from best to worst.
+ */
+export async function getBestPostsFromDB(limit) {
+    const posts = await postsCollection
+        .find({})
+        .sort({ total_like_times: -1 })
+        .limit(limit)
+        .toArray();
+
+    if (!posts || posts.length === 0) return [];
+
+    return posts.map((p) => ({
+        ...p,
+        _id: p._id.toString(),
+    }));
+}
+
+/**
+ * Get the list of posts, sorted from most comments to fewest.
+ */
+export async function getLoudestPostsFromDB(limit) {
+    const posts = await postsCollection
+        .find({})
+        .sort({ reply_times: -1 })
+        .limit(limit)
+        .toArray();
+
+    if (!posts || posts.length === 0) return [];
+
+    return posts.map((p) => ({
+        ...p,
+        _id: p._id.toString(),
+    }));
+}
+
+/**
+ * Get the list of trending posts, sorted based on a 'trending' score
+ * Formula for score is (likes + 10*comments) / (age_in_hours + 1)^1.5
+ * the 1.5 exponent is the decay factor. raising the decay factor makes trending posts de-rank faster
+ */
+export async function getTrendingPostsFromDB(limit) {
+    const now = new Date();
+
+
+    const posts = await postsCollection.aggregate([
+        {$addFields: {
+            age_in_hours: {
+                $divide: [
+                    {$subtract: [now, "$create_time"]},
+                    1000 * 60 * 60 // ms in 1 hr
+                ]
+            }
+        }},
+        {$addFields: {
+            post_value: {
+                $add: [
+                    "$total_like_times",
+                    {$multiply: [10, "$reply_times"]}
+                ]
+            }
+        }},
+        {$addFields: {
+            trend_rank: {
+                $divide:[
+                    "$post_value",
+                    {$pow: [{$add:["$age_in_hours",1]}, 1.5]}
+                ]
+            }
+        }},
+        {
+            $sort: {trend_rank: -1}
+        },
+        {
+            $limit: limit
+        }
+    ]).toArray()
+
+    if (!posts || posts.length === 0) return [];
+
+    return posts.map((p) => ({
+        ...p,
+        _id: p._id.toString(),
+    }));
+}
+
+/**
  * Get total posts from the database
  */
 export async function getTotalPostsFromDB() {

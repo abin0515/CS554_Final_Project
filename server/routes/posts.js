@@ -67,6 +67,33 @@ router.get('/page', async (req, res) => {
   }
 });
 
+router.get('/best', async (req, res) => {
+  try {
+    const {posts} = await postService.getBestPosts();
+    res.status(200).json({success:true, posts})
+  } catch (e) {
+    res.status(500).json({error:e.message});
+  }
+})
+
+router.get('/loudest', async (req, res) => {
+  try {
+    const {posts} = await postService.getLoudestPosts();
+    res.status(200).json({success:true, posts})
+  } catch (e) {
+    res.status(500).json({error:e.message});
+  }
+})
+
+router.get('/trending', async (req, res) => {
+  try {
+    const {posts} = await postService.getTrendingPosts();
+    res.status(200).json({success:true, posts})
+  } catch (e) {
+    res.status(500).json({error:e.message});
+  }
+})
+
 router.get('/detail', async (req, res) => {
   try {
     const postId = req.query.postId;

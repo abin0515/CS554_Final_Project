@@ -188,6 +188,46 @@ export async function getPostsByPage(page = 1) {
 } 
 
 /**
+ * Gets the highest rated posts
+ * @param {number} limit
+ * @returns {Promise<Array>} - array of Post objects, sorted by ranking (high to low)
+ */
+export async function getBestPosts(limit=10) {
+    const bestPosts = await postData.getBestPostsFromDB(limit);
+
+    return {
+        posts: bestPosts
+    }
+}
+
+/**
+ * Gets the posts with the most comments
+ * @param {number} limit
+ * @returns {Promise<Array>} - array of Post objects, sorted by ranking (high to low)
+ */
+export async function getLoudestPosts(limit=10) {
+    const loudPosts = await postData.getTotalPostsFromDB(limit);
+
+    return {
+        posts: loudPosts
+    }
+}
+
+/**
+ * Gets the most trending posts
+ * @param {number} limit
+ * @returns {Promise<Array>} - array of Post objects, sorted by ranking (high to low)
+ */
+export async function getTrendingPosts(limit=10) {
+    const trendPosts = await postData.getTrendingPostsFromDB(limit);
+
+    return {
+        posts: trendPosts
+    }
+}
+
+
+/**
  * Get all posts created by a specific user
  * @param {string} userId - the ID of the user
  * @returns {Promise<Array>} - array of post objects
