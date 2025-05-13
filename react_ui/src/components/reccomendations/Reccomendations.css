@@ -2,19 +2,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
     background-color: #fff8dc;
     border: 1px solid #fcd34d;
     border-radius: 0.5rem;
     padding: 0.5rem 1rem;
     margin-bottom: 1rem;
-  }
-  
-  .rec-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #374151;
-    margin: 0;
   }
   
   .rec-nav-button {
@@ -96,6 +88,9 @@
     text-align: center;
     margin: 0 auto;
     font-family: 'Segoe UI', sans-serif;
+    width:85px;
+    box-sizing: border-box;
+    flex-shrink: 0;
   }
   
   .rec-nav-button {
