@@ -62,3 +62,5 @@ export async function authenticate(req, res, next) {
         return res.status(401).json({ error: "Invalid token" });
     }
 }
+
+export {firebase_admin, serviceAccount };
