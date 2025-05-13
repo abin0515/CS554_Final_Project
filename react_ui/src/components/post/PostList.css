@@ -136,3 +136,15 @@
 .post-user-link:hover {
   text-decoration: underline;
 }
+
+.post-list-header-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.post-list-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex: 1;
+}

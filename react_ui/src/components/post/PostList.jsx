@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { POST_API_BASE_URL } from '../../config';
 import './PostList.css';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { useAuth } from '../../context/AuthContext';
 
 function PostList() {
   const [posts, setPosts] = useState([]);
@@ -12,6 +13,16 @@ function PostList() {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  const handleCreateClick = () => {
+    if (currentUser) {
+      navigate('/posts/create');
+    } else {
+      alert('Please sign in to create a post.');
+    }
+  };
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -45,7 +56,14 @@ function PostList() {
 
   return (
     <div className="post-list-container">
-      <h2 className="post-list-title">Discussion Feed</h2>
+      <div className="post-list-header-row">
+        <h2 className="post-list-title" style={{ marginBottom: 0 }}>Discussion Feed</h2>
+        <div className="post-list-header-actions">
+          <button className="create-post-button" onClick={handleCreateClick}>
+            Create Post
+          </button>
+        </div>
+      </div>
       {posts.length > 0 ? (
         posts.map((post) => (
           <div key={post._id} className="post-card">

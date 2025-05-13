@@ -74,7 +74,7 @@ function EditPost() {
     const filesToAdd = Array.from(files);
 
     if (imageFiles.length + filesToAdd.length > MAX_IMAGES) {
-      setError(`You can only upload up to ${MAX_IMAGES} images.`);
+      setSubmitError(`You can only upload up to ${MAX_IMAGES} images.`);
       return;
     }
 
