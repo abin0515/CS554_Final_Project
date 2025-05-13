@@ -13,6 +13,7 @@ import CreatePost from './components/post/CreatePost';
 import EditPost from './components/post/EditPost';
 import UserProfile from './components/UserProfile';
 import Chatbot from './components/Chatbot/Chatbot';
+import ChatComponent from './components/ChatComponent';
 
 function App() {
   return (
@@ -38,6 +39,9 @@ function App() {
           {/* Add route for profile page */}
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/profile/:userId" element={<UserProfile />} />
+
+          {/*adding route for chatroom*/}
+          <Route path="/chat/:userId" element={<ChatComponent />} />
           
           {/* Add other routes that should use the Layout here */}
           {/* Example: <Route path="profile" element={<UserProfile />} /> */}

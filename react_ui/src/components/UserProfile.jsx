@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../lib/Auth';
 import { POST_API_BASE_URL } from '../config';
 import './UserProfile.css';
@@ -63,9 +63,9 @@ function UserProfile() {
             <p className="profile-role">Community Member at MotherDuckers</p>
 
             {!isSelfProfile && (
-              <button className="follow-button" onClick={() => alert('Follow feature coming soon!')}>
-                Follow
-              </button>
+              <Link to={`/chat/${userProfile.uid}`}>
+                <button className="chat-button">Chat</button>
+              </Link>
             )}
           </div>
         </div>
