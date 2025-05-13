@@ -1,5 +1,30 @@
 # CS554 Final Project
 
+## Service Deployments
+
+### Database Services
+Both MongoDB and Redis have been deployed in an AWS VM for our project:
+
+- **MongoDB**: `18.188.222.62:27017`
+- **Redis Stack Server**:  `18.188.222.62:6379`
+
+### Messaging Service
+
+Because we have multiple servers in the backend, we use RabbitMQ as a message queue to facilitate communication across these servers.
+
+- **RabbitMQ web console**: `18.188.222.62:15672`
+
+### Admin Credentials
+
+Here are the admin creds for database and message queue services:
+
+* User name: `myuser`
+* Password: `mypassword`
+
+### Connection Configuration
+The connection details for both databases are configured in the `config/settings.js` file. Please refer to this file for the connection strings when developing features that require database access.
+
+
 ## Getting Started
 
 ### Frontend `react_ui`
@@ -15,12 +40,6 @@ npm install
 npm start
 ```
 
-### Backend `server`
-
-```sh
-npm install
-npm start
-```
 ### Backend `points_server`
 
 ```sh
@@ -28,30 +47,10 @@ npm install
 npm start
 ```
 
-## Service Deployments
+### Backend `server`
 
-### Database Services
-Both MongoDB and Redis have been deployed in an AWS VM for our project:
-
-- **MongoDB**: `18.188.222.62:27017`
-- **Redis Stack Server**:  `18.188.222.62:6379`
-
-### Messaging Service
-- **RabbitMQ web console**: 18.188.222.62:15672`
-Because we have multiple servers in the backend, we use RabbitMQ as a message queue to facilitate communication across these servers.
-
-### Access Credentials
-
-User name: `myuser`
-
-Password: `mypassword`
-
-### Connection Configuration
-The connection details for both databases are configured in the `config/settings.js` file. Please refer to this file for the connection strings when developing features that require database access.
-
-
-
-
+```sh
+npm install
 
 # Optional: if you want to use your own Firebase domain for user authentication, set:
 export FIREBASE_ADMIN_CERT_JSON_PATH="<PATH TO YOUR FIREBASE ADMIN CERT JSON>"
@@ -68,6 +67,6 @@ npm start
 
 `OPENAI_API_KEY`:
 
-* The chat feature is based on OpenAI LLM, which requires an [OpenAI API key](https://platform.openai.com/api-keys). 
+* The chat feature is based on OpenAI LLM, which requires an [OpenAI API key](https://platform.openai.com/api-keys).
 * When `OPENAI_API_KEY` is not set, it defaults to use test API key.
 
