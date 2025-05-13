@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     console.log("AuthProvider mounted. Setting up onAuthStateChanged listener.");
     // Listen for Firebase auth state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("Auth State Changed in AuthProvider:", user ? `User logged in: ${user.uid}` : "User logged out");
+      // console.log("Auth State Changed in AuthProvider:", user ? `User logged in: ${user.uid}` : "User logged out");
       setCurrentUser(user); // Set user object or null
       setLoading(false); // Auth check complete
     });

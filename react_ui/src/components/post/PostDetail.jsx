@@ -477,7 +477,7 @@ function PostDetail() {
       // Update states
       setLikeCounts(prevCounts => ({ ...prevCounts, ...initialCounts }));
       setLikedStatuses(initialLikedStatuses); // Set the initial liked statuses
-      console.log('Initialized likedStatuses:', initialLikedStatuses);
+      // console.log('Initialized likedStatuses:', initialLikedStatuses);
       // --------------------------------------
 
     } catch (e) {

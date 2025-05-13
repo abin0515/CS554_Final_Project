@@ -45,7 +45,7 @@ router.post('/submitchcek', authenticate, async (req, res) => {
             messagesForModeration,
             MODERATION_SYSTEM_PROMPT,
             [], // No tools for moderation
-            0.2 // Low temperature for more deterministic moderation output
+            0.5 // Low temperature for more deterministic moderation output
         );
 
         // Parse the raw response to determine if it's safe

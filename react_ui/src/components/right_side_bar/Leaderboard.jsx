@@ -92,7 +92,7 @@ const Leaderboard = ({ refreshKey }) => {
             {/* Display Other Leaderboard Entries */}
             {leaderboardEntries.length > 0 ? (
               leaderboardEntries.map((user) => {
-                console.log(user);
+                // console.log(user);
                 return (
                   <tr key={user.name}>
                      <td>
