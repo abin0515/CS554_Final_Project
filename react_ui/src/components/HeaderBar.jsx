@@ -9,6 +9,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle'; // MUI profil
 import "./HeaderBar.css";
 
 function HeaderBar() {
+  const { user } = useAuth();
   const authState = useAuth();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -43,9 +44,11 @@ function HeaderBar() {
             <span className="authControls">
               <SignOut />
             </span>
-            <button className="profile-button" onClick={() => navigate('/profile')}>
-              <AccountCircleIcon fontSize="large" />
-            </button>
+            <img
+            src={user.photoURL || '/default-avatar.png'}
+            alt="Profile"
+            className="nav-profile-picture"
+            />
           </>
         ) : (
           <>
