@@ -27,13 +27,6 @@ The connection details for both databases are configured in the `config/settings
 
 ## Getting Started
 
-### Frontend `react_ui`
-
-```sh
-npm install
-npm run dev
-```
-
 ### Backend `likes_server`
 ```sh
 npm install
@@ -70,3 +63,10 @@ npm start
 * The chat feature is based on OpenAI LLM, which requires an [OpenAI API key](https://platform.openai.com/api-keys).
 * When `OPENAI_API_KEY` is not set, it defaults to use test API key.
 
+### Frontend `react_ui`
+
+```sh
+npm install
+npm run build
+npm run preview
+```
