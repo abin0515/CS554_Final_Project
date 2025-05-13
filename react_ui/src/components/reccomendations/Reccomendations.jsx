@@ -4,6 +4,8 @@ import BestPosts from "./BestPosts";
 import LoudestPosts from "./LoudestPosts";
 import TrendingPosts from "./TrendingPosts";
 
+import "./Reccomendations.css"
+
 const rotary_queue = [
     {name:"Trending Posts", comp:<TrendingPosts/>},
     {name:"Best Posts", comp:<BestPosts/>},
