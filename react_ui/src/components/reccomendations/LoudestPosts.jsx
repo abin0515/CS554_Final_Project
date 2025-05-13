@@ -44,11 +44,10 @@ function LoudestPosts() {
     {posts.map((post, i)=>{
         return <li key={i}>
             <Link to={`/posts/detail?postId=${post._id}`}><h5>{post.title}</h5></Link>
-            <Link to={`/profile/${post.user_id}`}><p>{post.user_display_name || post.user_email}</p></Link>
+            <p className='subtext'>by {post.user_display_name || post.user_email ? <Link to={`/profile/${post.user_id}`}>{post.user_display_name || post.user_email}</Link> : "Anonymous" } </p>
             <div className="post-meta">
               <span><FavoriteIcon fontSize="small" /> {post.total_like_times}</span>
               <span><ChatBubbleIcon fontSize="small" /> {post.reply_times}</span>
-              <span><AccessTimeIcon fontSize="small" /> {new Date(post.create_time).toLocaleDateString()}</span>
             </div>
         </li>
     })}
