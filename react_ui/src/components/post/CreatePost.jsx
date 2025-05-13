@@ -183,10 +183,7 @@ function CreatePost() {
         </div>
       </div>
 
-      <div className="create-post-topic">
-        <button type="button" className="topic-button">+ Add Topic</button>
-      </div>
-
+      
       <div className="image-upload-wrapper">
       <div
         className="image-upload-section"
