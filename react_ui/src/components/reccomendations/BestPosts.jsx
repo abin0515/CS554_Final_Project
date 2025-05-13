@@ -43,13 +43,24 @@ function BestPosts() {
   return (<ul>
     {posts.map((post, i)=>{
         return <li key={i}>
-            <Link to={`/posts/detail?postId=${post._id}`}><h5>{post.title}</h5></Link>
-            <p className='subtext'>by {post.user_display_name || post.user_email ? <Link to={`/profile/${post.user_id}`}>{post.user_display_name || post.user_email}</Link> : "Anonymous" } </p>
-            <div className="post-meta">
-              <span><FavoriteIcon fontSize="small" /> {post.total_like_times}</span>
-              <span><ChatBubbleIcon fontSize="small" /> {post.reply_times}</span>
-            </div>
-        </li>
+  <Link to={`/posts/detail?postId=${post._id}`} className="trending-post-title">
+    <h5>{post.title}</h5>
+  </Link>
+  <p className="subtext">
+    by {post.user_display_name || post.user_email ? (
+      <Link to={`/profile/${post.user_id}`} className="trending-post-author">
+        {post.user_display_name || post.user_email}
+      </Link>
+    ) : (
+      "Anonymous"
+    )}
+  </p>
+  <div className="post-meta">
+    <span><FavoriteIcon fontSize="small" /> {post.total_like_times}</span>
+    <span><ChatBubbleIcon fontSize="small" /> {post.reply_times}</span>
+  </div>
+</li>
+
     })}
   </ul>);
 }

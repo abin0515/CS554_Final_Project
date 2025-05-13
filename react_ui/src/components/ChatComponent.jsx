@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { connectSocket, getSocket } from '../lib/socket';
+import { connectSocket } from '../lib/socket';
 import { fetchUserDisplayName } from '../lib/Auth';
 import './ChatComponent.css';
 
 function ChatComponent() {
-  const { userId } = useParams(); // recipient UID
+  const { userId } = useParams();
   const { currentUser, loading } = useAuth();
   const [message, setMessage] = useState('');
   const [chatLog, setChatLog] = useState([]);
   const [recipientName, setRecipientName] = useState('Loading...');
+  const socketRef = useRef(null); 
 
   useEffect(() => {
     if (!userId) return;
@@ -21,15 +22,18 @@ function ChatComponent() {
     if (!currentUser || !userId) return;
 
     const setupSocket = async () => {
-      const socket = await connectSocket(currentUser);
+      if (!socketRef.current) {
+        socketRef.current = await connectSocket(currentUser);
+      }
+
+      const socket = socketRef.current;
       if (!socket) return;
 
       const roomId = [currentUser.uid, userId].sort().join('_');
       socket.emit('join_room', roomId);
 
-      // Prevent duplicate listeners
-      socket.off('receive_message');
-
+    
+      socket.off('receive_message'); 
       socket.on('receive_message', (msg) => {
         setChatLog((prev) => [
           ...prev,
@@ -45,7 +49,7 @@ function ChatComponent() {
     setupSocket();
 
     return () => {
-      const socket = getSocket();
+      const socket = socketRef.current;
       if (socket) {
         socket.off('receive_message');
       }
@@ -54,19 +58,19 @@ function ChatComponent() {
 
   const sendMessage = (e) => {
     e.preventDefault();
-    const socket = getSocket();
+    const socket = socketRef.current;
     if (!currentUser || !socket || !message.trim()) return;
-  
+
     const room = [currentUser.uid, userId].sort().join('_');
     const msg = {
       from: currentUser.uid,
       to: userId,
       text: message,
-      room
+      room,
     };
-  
+
     socket.emit('send_message', msg);
-    setMessage(''); 
+    setMessage('');
   };
 
   if (loading || !currentUser) return <p>Loading chat...</p>;

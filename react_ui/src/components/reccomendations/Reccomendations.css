@@ -1,32 +1,124 @@
 #reccomendations-header {
     display: flex;
-    justify-content: space-between;
-    height:65px;
-}
-
-#reccomendations-header > h4 {
-    text-align: center;
-}
-
-ul {
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    background-color: #fff8dc;
+    border: 1px solid #fcd34d;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .rec-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+  }
+  
+  .rec-nav-button {
+    background-color: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #1f2937;
+    font-size: 1.1rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+  }
+  
+  .rec-nav-button:hover {
+    background-color: #fde68a;
+  }
+  
+  
+  ul {
     list-style-type: none;
     padding-left: 0;
-}
-
-
-.subtext { 
-    font-size: x-small;
-    margin-top: 0px;
-    margin-bottom: 0px;
-}
-
-.post-meta {
-    border: none !important;
-}
-
-li {
-    padding-bottom: 5px;
-    border-bottom: 1px dashed #dbeafe;
+    margin: 0;
+  }
+  
+  li {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px dashed #fcd34d;
     display: flex;
     flex-direction: column;
-}
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.95rem;
+    color: #1f2937;
+  }
+  
+  li:last-child {
+    border-bottom: none;
+  }
+  
+  .subtext {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+  
+  .post-meta {
+    border: none !important;
+    font-size: 0.85rem;
+    color: #4b5563;
+  }
+  
+ 
+  .trending-post-title {
+    text-decoration: none;
+    color: #f59e0b; /* warm yellow */
+    font-weight: 600;
+    transition: color 0.2s ease;
+  }
+  
+  .trending-post-title:hover {
+    color: #d97706;
+  }
+  
+  .trending-post-author {
+    text-decoration: none;
+    color: #60a5fa; /* light blue */
+    transition: color 0.2s ease;
+  }
+  
+  .trending-post-author:hover {
+    color: #3b82f6;
+  }
+  
+  
+  .rec-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #374151;
+    text-align: center;
+    margin: 0 auto;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  .rec-nav-button {
+    background-color: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #1f2937;
+    padding: 0.3rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .rec-nav-button:hover {
+    background-color: #fde68a;
+  }
+  
+  .recommendations-wrapper {
+    border: 1px solid #fcd34d;
+    background-color: #fffefc;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
