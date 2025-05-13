@@ -44,11 +44,13 @@ function HeaderBar() {
             <span className="authControls">
               <SignOut />
             </span>
-            <img
-            src={user.photoURL || '/default-avatar.png'}
-            alt="Profile"
-            className="nav-profile-picture"
-            />
+            <button className="profile-button" onClick={() => navigate('/profile')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+  <img
+    src={user.photoURL || '/default-avatar.png'}
+    alt="Profile"
+    className="nav-profile-picture"
+  />
+</button>
           </>
         ) : (
           <>
