@@ -1,0 +1,32 @@
+#reccomendations-header {
+    display: flex;
+    justify-content: space-between;
+    height:65px;
+}
+
+#reccomendations-header > h4 {
+    text-align: center;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+
+.subtext { 
+    font-size: x-small;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.post-meta {
+    border: none !important;
+}
+
+li {
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #dbeafe;
+    display: flex;
+    flex-direction: column;
+}

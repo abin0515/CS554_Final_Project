@@ -4,6 +4,7 @@ import './Layout.css';
 import HeaderBar from './HeaderBar';
 import RightSideBar from './right_side_bar/RightSideBar';
 import { useAuth } from '../context/AuthContext';
+import Reccomendations from './reccomendations/Reccomendations';
 
 function Layout() {
   const location = useLocation();
@@ -31,7 +32,7 @@ function Layout() {
       <div className="app-container">
         <HeaderBar />
         <div className={`app-body ${isProfilePage ? 'profile-view' : ''}`}>
-          {!isProfilePage && <div className="app-sidebar">Sidebar Area</div>}
+          {!isProfilePage && <div className="app-sidebar"><Reccomendations/></div>}
           <div className={`app-main ${isProfilePage ? 'full-width' : ''}`}>
             {location.pathname === '/' && !isProfilePage && (
               <div className="app-tabs">
