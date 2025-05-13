@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { Pinecone } from '@pinecone-database/pinecone';
 
 dotenv.config(); // Load .env file
 
@@ -17,6 +18,38 @@ if (process.env.OPENAI_API_KEY) {
 const openai = new OpenAI({
     apiKey: openaiApiKey,
 });
+
+// Pinecone environment variables
+const PINECONE_API_KEY = "pcsk_2pXFUN_6tZujjitwLYkbK74MgU9C7mbS51DNhWj2t2f6jMmvGNnr2HpytLPjavBBmhhVyD";
+const PINECONE_ENVIRONMENT = "https://motherducker-9sb4ncv.svc.aped-4627-b74a.pinecone.io";
+const PINECONE_INDEX_NAME = "motherducker";
+
+// --- Pinecone Setup ---
+const pinecone = new Pinecone({
+  apiKey: PINECONE_API_KEY,
+  controllerHostUrl: PINECONE_ENVIRONMENT,
+});
+const pineconeIndex = pinecone.Index(PINECONE_INDEX_NAME);
+
+// --- Retrieval Function ---
+async function retrieveRelevantDocs(query, topK = 3) {
+  // Get embedding for the query
+  const embeddingResponse = await openai.embeddings.create({
+    model: 'text-embedding-ada-002',
+    input: query,
+  });
+  const queryEmbedding = embeddingResponse.data[0].embedding;
+
+  // Query Pinecone for similar vectors
+  const result = await pineconeIndex.query({
+    vector: queryEmbedding,
+    topK,
+    includeMetadata: true,
+  });
+
+  // Return the most relevant documents/snippets
+  return result.matches.map(match => match.metadata.text);
+}
 
 // --- Define your local functions that OpenAI can call (default tools) ---
 const get_weather = (location, unit = "celsius") => {
@@ -69,6 +102,24 @@ const processChat = async (userMessages, systemPrompt = null, toolsOverride = de
         role: m.role,
         content: m.content
     }));
+
+    // --- Pinecone Retrieval Augmentation ---
+    const lastUserMessage = userMessages[userMessages.length - 1]?.content;
+    let retrievedDocs = [];
+    if (lastUserMessage) {
+      try {
+        retrievedDocs = await retrieveRelevantDocs(lastUserMessage, 3);
+      } catch (err) {
+        console.error("Pinecone retrieval error:", err);
+      }
+    }
+    if (retrievedDocs.length > 0) {
+      currentMessages.unshift({
+        role: "system",
+        content: `Relevant context:\n${retrievedDocs.join('\n---\n')}`,
+      });
+    }
+    // --- End Pinecone Retrieval ---
 
     if (systemPrompt) {
         currentMessages.unshift({ role: "system", content: systemPrompt });
