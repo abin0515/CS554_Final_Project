@@ -206,7 +206,7 @@ export async function getBestPosts(limit=10) {
  * @returns {Promise<Array>} - array of Post objects, sorted by ranking (high to low)
  */
 export async function getLoudestPosts(limit=10) {
-    const loudPosts = await postData.getTotalPostsFromDB(limit);
+    const loudPosts = await postData.getLoudestPostsFromDB(limit);
 
     return {
         posts: loudPosts
