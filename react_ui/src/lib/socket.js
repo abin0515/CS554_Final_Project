@@ -1,4 +1,4 @@
-import { io } from 'socket.io-client'; // ✅ fix: use named import
+import { io } from 'socket.io-client';
 
 let socket;
 
@@ -8,7 +8,8 @@ export async function connectSocket(currentUser) {
 
   const token = await currentUser.getIdToken();
 
-  socket = io('http://localhost:4000', {
+  socket = io('http://localhost:3000', {
+    path: '/chat-ws', // new endpoint path
     auth: {
       token,
     },

@@ -1,11 +1,13 @@
 import express from 'express';
-import session from 'express-session'
+import session from 'express-session';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import http from 'http';
+import configRoutes from './routes/index.js';
 import { startConsumer, closeConsumerConnection } from './listener/mqConsumer.js';
-
-import configRoutes from './routes/index.js'
+import { serviceAccount } from './middleware/authenticate.js';
+import { initChatWebSocket } from './service/chat_websocket.js';
 
 const app = express();
 
@@ -26,28 +28,35 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
-    session({
-        name: 'FinalProject',
-        secret: "This is a secret",
-        saveUninitialized: false,
-        resave: false,
-        cookie: { maxAge: 1800000 }
-    })
+  session({
+    name: 'FinalProject',
+    secret: "This is a secret",
+    saveUninitialized: false,
+    resave: false,
+    cookie: { maxAge: 1800000 },
+  })
 );
 // app.use(middleware.logger);
 
-
+// Setup routes
 configRoutes(app);
 
-// Start the server and the consumer
-const PORT = 3000; // Define port
-const server = app.listen(PORT, () => { // Store server instance
-    console.log("We've now got a server!");
-    console.log(`Your routes will be running on http://localhost:${PORT}`);
-    // Start the RabbitMQ consumer after the server is ready
-    startConsumer().catch(error => {
-        console.error("Failed to start RabbitMQ consumer initially:", error);
-    });
+// Create the HTTP server from the Express app
+const server = http.createServer(app);
+
+// Initialize Socket.IO using your external module
+initChatWebSocket(server);
+
+// Start the HTTP server
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log("We've now got a server!");
+  console.log(`Your routes are running on http://localhost:${PORT}`);
+  console.log(`Socket.IO endpoint is available at http://localhost:${PORT}/chat-ws`);
+  // Start RabbitMQ consumer after the server is ready
+  startConsumer().catch((error) => {
+    console.error("Failed to start RabbitMQ consumer initially:", error);
+  });
 });
 
 // Graceful shutdown
