@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import './CreatePost.css';
 
 const MAX_IMAGES = 6;
+const MAX_IMAGE_SIZE_MB = 20;
+const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 function CreatePost() {
   const [title, setTitle] = useState('');
@@ -32,6 +34,14 @@ function CreatePost() {
 
     setError(null);
     const filesToAdd = Array.from(files);
+
+    // Check for file size
+    const tooLarge = filesToAdd.find(file => file.size > MAX_IMAGE_SIZE_BYTES);
+    if (tooLarge) {
+      setError(`Each image must be less than ${MAX_IMAGE_SIZE_MB}MB. File "${tooLarge.name}" is too large.`);
+      event.target.value = '';
+      return;
+    }
 
     if (imageFiles.length + filesToAdd.length > MAX_IMAGES) {
       setError(`You can only upload up to ${MAX_IMAGES} images.`);
@@ -70,6 +80,13 @@ function CreatePost() {
       const files = event.dataTransfer.files;
       if (!files) return;
       const filesToAdd = Array.from(files);
+
+      // Check for file size
+      const tooLarge = filesToAdd.find(file => file.size > MAX_IMAGE_SIZE_BYTES);
+      if (tooLarge) {
+        setError(`Each image must be less than ${MAX_IMAGE_SIZE_MB}MB. File "${tooLarge.name}" is too large.`);
+        return;
+      }
 
       if (imageFiles.length + filesToAdd.length > MAX_IMAGES) {
         setError(`You can only upload up to ${MAX_IMAGES} images.`);
@@ -184,6 +201,7 @@ function CreatePost() {
       </div>
 
       
+
       <div className="image-upload-wrapper">
       <div
         className="image-upload-section"

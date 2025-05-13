@@ -11,7 +11,7 @@ const MAX_IMAGES = 6;
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 1024 * 1024 * 5 }
+  limits: { fileSize: 1024 * 1024 * 20 }
 });
 
 router.post(

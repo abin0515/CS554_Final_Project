@@ -641,10 +641,10 @@ function PostDetail() {
         if (!response.ok || !result.success) throw new Error(result.error || 'Failed');
 
         // Correctly form the user identifier for the success message
-        const targetUserIdentifier = parentReply.anonymity ? 'Anonymous User' : (parentReply.user_id ? `User ${parentReply.user_id}` : 'User');
+        // const targetUserIdentifier = parentReply.anonymity ? 'Anonymous User' : (parentReply.user_id ? `User ${parentReply.user_id}` : 'User');
 
         setReplyingToId(null);
-        setMainReplySuccess(`Reply to ${targetUserIdentifier} submitted!`);
+        setMainReplySuccess(`Reply submitted!`);
 
         setReplies(prevReplies => prevReplies.map(r =>
             r._id === parentReply._id
@@ -932,7 +932,7 @@ function PostDetail() {
                                                 <span className="reply-author">
                                                     <DisplayName userId={subReply.user_id} anonymity={subReply.anonymity} />
                                                     {subReply.target_reply_id &&
-                                                        <> replied to <DisplayName userId={subReply.target_user_id} anonymity={subReply.anonymity} />
+                                                        <> replied to <DisplayName userId={subReply.target_user_id}  />
                                                         </>
                                                     }
                                                 </span>
