@@ -64,7 +64,7 @@ function UserProfile() {
 
             {!isSelfProfile && (
               <Link to={`/chat/${userProfile.uid}`}>
-                {/* <button className="chat-button">Chat</button> */}
+                {<button className="chat-button">Chat</button> }
               </Link>
             )}
           </div>
