@@ -1,11 +1,11 @@
 import amqp from 'amqplib';
 
-const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://myuser:mypassword@18.188.222.62:5672/';
+const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://myuser:mypassword@localhost:5672/';
 let channel = null;
 let connection = null;
 
 /**
- * Connects to RabbitMQ, creates a channel, asserts the exchange, 
+ * Connects to RabbitMQ, creates a channel, asserts the exchange,
  * and optionally asserts+binds a queue (for testing/simple setups).
  * @param {string} exchangeName The name of the exchange to assert.
  * @param {string} exchangeType The type of the exchange.
@@ -81,14 +81,14 @@ export async function publishMessage(exchangeName, routingKey, message, exchange
         // Publish message to the exchange with the routing key
         console.log(`Publishing message to exchange '${exchangeName}' with routing key '${routingKey}':`, message);
         const success = channel.publish(exchangeName, routingKey, messageBuffer, { persistent: true }); // Make message persistent
-        
+
         if (!success) {
             // Handle potential backpressure - requires more complex logic with drain event
             console.warn(`Failed to publish message immediately to exchange '${exchangeName}' (buffer full?). Check drain event.`);
             // For simplicity, we return false, but a robust publisher might wait for drain
              return false;
         }
-        
+
         console.log(`Message successfully published to exchange '${exchangeName}' with routing key '${routingKey}'.`);
         return true; // Return true on successful publish call
 
@@ -123,4 +123,4 @@ export async function closeRabbitMQ() {
 process.on('SIGINT', async () => {
     await closeRabbitMQ();
     process.exit(0);
-}); 
+});

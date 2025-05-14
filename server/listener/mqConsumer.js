@@ -1,7 +1,7 @@
 import amqp from 'amqplib';
 import { handleLikesTask } from '../service/replies_service.js';
 // Configuration - Ensure these match the publisher (likes_server)
-const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://myuser:mypassword@18.188.222.62:5672/';
+const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://myuser:mypassword@localhost:5672/';
 const EXCHANGE_NAME = 'app_events';
 const EXCHANGE_TYPE = 'direct';
 const QUEUE_NAME = 'post_server_queue'; // Queue for the point server (or this main server)
@@ -28,7 +28,7 @@ export async function startConsumer() {
         console.log(`(Consumer: ${QUEUE_NAME}) Binding queue to exchange '${EXCHANGE_NAME}' with key '${BINDING_KEY}'...`);
         await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, BINDING_KEY);
 
-        
+
 
         // Start consuming messages
         channel.consume(QUEUE_NAME, (msg) => {
@@ -39,7 +39,7 @@ export async function startConsumer() {
                     console.log(`(Consumer: ${QUEUE_NAME}) Received message with key '${msg.fields.routingKey}':`, message);
 
                     // ** TODO: Add specific logic for point server here later **
-                    handleLikesTask(message.bizId, message.userId, message.liked);  
+                    handleLikesTask(message.bizId, message.userId, message.liked);
                     // Acknowledge the message
                     channel.ack(msg);
                 } catch (error) {
@@ -87,9 +87,9 @@ export async function closeConsumerConnection() {
     }
 }
 
-// Optional: Handle SIGINT for graceful shutdown 
+// Optional: Handle SIGINT for graceful shutdown
 // (better to call closeConsumerConnection from main app's shutdown)
 process.on('SIGINT', async () => {
     await closeConsumerConnection();
     process.exit(0);
-}); 
+});
