@@ -2,24 +2,33 @@
 
 ## Service Deployments
 
-### Database Services
-Both MongoDB and Redis have been deployed in an AWS VM for our project:
+### Deploy using Docker
 
-- **MongoDB**: `18.188.222.62:27017`
-- **Redis Stack Server**:  `18.188.222.62:6379`
+We host or service dependencies locally using docker. To deploy our services:
 
-### Messaging Service
+* MongoDB (port 27017)
+* Redis (port 6379)
+* RabbitMQ (port 5672)
 
-Because we have multiple servers in the backend, we use RabbitMQ as a message queue to facilitate communication across these servers.
+You can simply run:
 
-- **RabbitMQ web console**: `18.188.222.62:15672`
+```sh
+docker-compose up -d
+```
 
-### Admin Credentials
+### Using our test endpoints (back up plan)
 
-Here are the admin creds for database and message queue services:
+If you have any issue running docker deployment, try our server (you need to edit config in servers):
 
-* User name: `myuser`
-* Password: `mypassword`
+- MongoDB: `18.188.222.62:27017`
+- Redis Stack Server:  `18.188.222.62:6379`
+
+- RabbitMQ: `18.188.222.62:5672`
+
+    * Admin User name: `myuser`
+
+    * Password: `mypassword`
+
 
 ### Connection Configuration
 The connection details for both databases are configured in the `config/settings.js` file. Please refer to this file for the connection strings when developing features that require database access.
@@ -45,15 +54,20 @@ npm start
 ```sh
 npm install
 # Optional: if you want to seed the database with sample data
-npm run seed 
+npm run seed
 
 npm start
+```
+
+#### Optional Settings:
+
+Export these variables before `npm start`
+
+```sh
 # Optional: if you want to use your own Firebase domain for user authentication, set:
 export FIREBASE_ADMIN_CERT_JSON_PATH="<PATH TO YOUR FIREBASE ADMIN CERT JSON>"
 # Optional: if you want to use your own OpenAI API key, set:
 export OPENAI_API_KEY="<YOUR OPENAI API KEY>"
-
-
 ```
 
 `FIREBASE_ADMIN_CERT_JSON_PATH`:
