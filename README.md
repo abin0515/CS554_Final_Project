@@ -47,12 +47,13 @@ npm install
 # Optional: if you want to seed the database with sample data
 npm run seed 
 
+npm start
 # Optional: if you want to use your own Firebase domain for user authentication, set:
 export FIREBASE_ADMIN_CERT_JSON_PATH="<PATH TO YOUR FIREBASE ADMIN CERT JSON>"
 # Optional: if you want to use your own OpenAI API key, set:
 export OPENAI_API_KEY="<YOUR OPENAI API KEY>"
 
-npm start
+
 ```
 
 `FIREBASE_ADMIN_CERT_JSON_PATH`:
@@ -69,6 +70,9 @@ npm start
 
 ```sh
 npm install
+
 npm run build
 npm run preview
+
+(if you have problem with preview, try to just run `npm run dev`)
 ```
