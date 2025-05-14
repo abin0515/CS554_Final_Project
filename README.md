@@ -13,6 +13,9 @@ We host or service dependencies locally using docker. To deploy our services:
 You can simply run:
 
 ```sh
+docker compose up -d
+
+# or if you use older version of docker:
 docker-compose up -d
 ```
 
