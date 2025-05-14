@@ -1,5 +1,5 @@
 export const mongoConfig = {
-    serverUrl: 'mongodb://root:root@18.188.222.62:27017/',
+    serverUrl: 'mongodb://localhost:27017/',
     
     database: '554_Final_Project'
 };
