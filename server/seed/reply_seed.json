@@ -1,0 +1,34 @@
+[{
+  "post_id": "6823e4a9f0bc8dfe82d4246b",
+  "answer_id": null,
+  "user_id": "SYpPwdFi1yXUBU642tdByVA7DVC3",
+  "content": "I am gonna leave a polite reply here.test edit.",
+  "target_user_id": null,
+  "target_reply_id": null,
+  "reply_times": 1,
+  "liked_times": 1,
+  "anonymity": false,
+  "create_time": {
+    "$date": "2025-05-14T00:33:17.234Z"
+  },
+  "update_time": {
+    "$date": "2025-05-14T00:34:11.319Z"
+  }
+},
+{
+  "post_id": "6823e4a9f0bc8dfe82d4246b",
+  "answer_id": "6823e4cdf0bc8dfe82d4246c",
+  "user_id": "tYlqIHRn7yUeQvZuzBMo24lL2FK2",
+  "content": "test sub reply.",
+  "target_user_id": "SYpPwdFi1yXUBU642tdByVA7DVC3",
+  "target_reply_id": "6823e4cdf0bc8dfe82d4246c",
+  "reply_times": 0,
+  "liked_times": 1,
+  "anonymity": true,
+  "create_time": {
+    "$date": "2025-05-14T00:34:11.370Z"
+  },
+  "update_time": {
+    "$date": "2025-05-14T00:34:21.193Z"
+  }
+}]

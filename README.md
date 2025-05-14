@@ -44,6 +44,8 @@ npm start
 
 ```sh
 npm install
+# Optional: if you want to seed the database with sample data
+npm run seed 
 
 # Optional: if you want to use your own Firebase domain for user authentication, set:
 export FIREBASE_ADMIN_CERT_JSON_PATH="<PATH TO YOUR FIREBASE ADMIN CERT JSON>"
